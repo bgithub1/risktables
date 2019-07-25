@@ -1,0 +1,3 @@
+config_name,dburl,databasename,username,password,schema_name,table_names
+secdb_local,localhost,sec_db,,,sec_schema,options_table; underlying_table
+dashrisk_local,localhost,testdb,,,test_schema,yahoo_daily
