@@ -206,6 +206,10 @@ def make_df(dict_df):
     else:
         return pd.DataFrame(dict_df,columns=dict_df.keys())
 
+class BadColumnsException(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+    
 def create_dt_div(dtable_id,df_in=None,
                   columns_to_display=None,
                   editable_columns_in=None,
@@ -267,9 +271,8 @@ def create_dt_div(dtable_id,df_in=None,
         df = df_in.copy()
         if columns_to_display is not None:
             if any([c not in df.columns.values for c in columns_to_display]):
-                m = f'create_dt_div EXCEPTION: actual columns of {df.columns.values} do not match desired columns of {columns_to_display}'
-                print(df)
-                raise ValueError(m)           
+                m = f'{columns_to_display} are missing from input data. Your input Csv'
+                raise BadColumnsException(m)           
             df = df[columns_to_display]
             
     dt.data=df.to_dict('rows')
@@ -722,12 +725,14 @@ class MarkdownComponent(ComponentWrapper):
 class UploadComponent(ComponentWrapper):
     def __init__(self,component_id,text=None,
                  initial_data = None,
+                 acceptable_file_extensions='.csv',
                  style=None,logger=None):
         t = "Choose a File" if text is None else text
         self.component_id = component_id
         u1 = dcc.Upload(
                     id=component_id,
                     children=html.Div([t]),
+                    accept = acceptable_file_extensions,
                     # Allow multiple files to be uploaded
                     multiple=False,
                     style=blue_button_style if style is None else style)
@@ -823,6 +828,18 @@ class DashTableComponent(ComponentWrapper):
                         else:
                             output_dict = df.to_dict('records')
                             ret =  [dt_div,output_dict]
+                except BadColumnsException:
+                    # return an error message in place of the actual DataFrame
+                    colstext = str(cols).replace('[','').replace(']','')
+                    children = [
+                        html.H3('ERROR FROM INPUT CSV FILE'),
+                        html.P(f'Expected CSV File with columns:'),
+                        html.P(colstext),
+                        html.P(f'Actual CSV Columns are:'),
+                        html.P(str(df.columns.values))
+                    ]
+                    err_html = html.Div(children,style={'line-height':'100%'})
+                    ret = [err_html,{}]                    
                 except Exception as e:
                     logger.warn(f'!!!!!!!!!!!!!! {component_id} _dt_lambda EXCEPTION: {str(e)} !!!!!!!!!!!!!')
                     traceback.print_exc()

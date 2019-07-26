@@ -20,7 +20,7 @@ from risktables import var_models as varm
 from risktables import option_models as opmod
 from risktables import portfolio_hedge as ph
 from risktables import build_history as bh
-from collections import OrderedDict
+from risktables import dgrid_components as dgc
 
 import pandas as pd
 import numpy as np
@@ -58,12 +58,40 @@ def update_greek_totals(df_risk_all,df_atm_price):
     ret['theta'] = df_risk.dtheta.sum()
     return  ret
     
-
+def log_or_print(mess,logger=None):
+    if logger is None:
+        print(mess)
+    else:
+        logger.info(mess)
+        
 def update_risk_data(df,temp_folder,use_postgres=False,
         dburl=None,databasename=None,username=None,
         password=None,schema_name=None,yahoo_daily_table=None,
-        calculate_hedge_ratio=False):
-    print(f'Start computing VaR {datetime.datetime.now()}')
+        calculate_hedge_ratio=False,logger=None):
+    
+    error_message = None
+    log_or_print(f'Start computing VaR {datetime.datetime.now()}',logger)
+    # check validity of df
+    if df is None or len(df)<1:
+        error_message = 'No input data'
+    if 'symbol' not in df.columns.values:
+        error_message = 'symbol not a column in input data.'
+    if 'position' not in df.columns.values:
+        error_message = 'symbol not a column in input data.'
+    if len(df[df.position.isna()])>0:
+        error_message = 'position column has missing data.'
+    try:
+        df.position.sum()
+    except:
+        error_message = 'position column has invalid non-numeric values.'        
+
+    if error_message is not None:
+        if logger is None:
+            print('update_risk_data ERROR MESSAGE ' + error_message)
+        else:
+            logger.warn('update_risk_data ERROR MESSAGE ' + error_message)
+        return {'update_risk_data':error_message}
+    
     if use_postgres:
         hb = bh.HistoryBuilder(dburl=dburl, databasename=databasename, 
                                username=username, password=password, 
@@ -168,9 +196,9 @@ def update_risk_data(df,temp_folder,use_postgres=False,
         'theta':risk_totals_dict['theta'],
         'df_hedge_ratios':df_hedge_ratios.to_dict(),
         'df_corr':df_corr.to_dict(),
-        'df_corr_price':df_corr_price.to_dict()
+        'df_corr_price':df_corr_price.to_dict(),
         }
-    print('leaving update_memory')
+    log_or_print('leaving update_memory')
     return ret
 
 class RiskCalcs():
@@ -182,7 +210,8 @@ class RiskCalcs():
         password=None,
         schema_name=None,
         yahoo_daily_table=None,
-        temp_folder='./temp_folder'):
+        temp_folder='./temp_folder',
+        logger=None):
         
         self.use_postgres = use_postgres
         self.dburl = dburl
@@ -192,13 +221,14 @@ class RiskCalcs():
         self.schema_name = schema_name
         self.yahoo_daily_table = yahoo_daily_table
         self.temp_folder = temp_folder
+        self.logger = dgc.init_root_logger() if logger is None else logger
         
     def calculate(self,df):
         return update_risk_data(df,self.temp_folder, use_postgres=self.use_postgres, 
                 dburl=self.dburl, databasename=self.databasename, 
                 username=self.username, password=self.password, 
                 schema_name=self.schema_name, 
-                yahoo_daily_table=self.yahoo_daily_table)
+                yahoo_daily_table=self.yahoo_daily_table,logger=self.logger)
         
         
         

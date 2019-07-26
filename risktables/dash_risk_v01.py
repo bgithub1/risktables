@@ -148,7 +148,8 @@ def risk_data_closure(use_postgres=False,
                              username='',
                              password='',
                              schema_name='test_schema',
-                             yahoo_daily_table='yahoo_daily'):
+                             yahoo_daily_table='yahoo_daily',
+                             logger=None):
     '''
     This method returns a method to access historical data from either yahoo, or a postgres db.
     :param use_postgres:
@@ -168,7 +169,8 @@ def risk_data_closure(use_postgres=False,
             use_postgres=use_postgres, 
             dburl=dburl, databasename=databasename, 
             username=username, password=password, 
-            schema_name=schema_name, yahoo_daily_table=yahoo_daily_table)
+            schema_name=schema_name, yahoo_daily_table=yahoo_daily_table,
+            logger=logger)
         
         risk_dict_dfs = rt.calculate(df_portfolio)
         return risk_dict_dfs
@@ -236,7 +238,6 @@ if __name__=='__main__':
     parser.add_argument('--initial_portolio',type=str,default=DEFAULT_PORTFOLIO_NAME,
                         help='initial portfolio to Load')
     parser.add_argument('--database_config_name',type=str,nargs='?',
-                        choices=postgres_config_names,
                         help=f'IF not specified, do not use postgres.  If used, one of {postgres_config_names}')
 
     args = parser.parse_args()
