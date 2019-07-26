@@ -1,0 +1,12 @@
+### symbol column help:
+* Symbols with yahoo data 
+  * **IBM, AAPL, ^GSPC, ^EURUSD**
+* Commodities symbols in the form CodeMonthYear
+  * **CLQ19, ESM20, ZSN19, NGF20**
+* Options symbols in the form Sym_Expiry_strike_c/p
+  * **IBM_20191222_190_p** : 
+    * *IBM 190 call* 
+      *expiring on Dec 22, 2019*
+  * **NGF20_20191225_2.50_c** : 
+    * *NGF20 2.50 Call Option*
+      * *expiring on Dec 25th, 2019*

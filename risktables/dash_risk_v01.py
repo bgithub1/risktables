@@ -23,6 +23,8 @@ import dash_html_components as html
 import argparse as ap
 import pandas as pd
 from IPython import display
+import locale
+import datetime
 
 STYLE_TITLE={
     'line-height': '20px',
@@ -35,43 +37,71 @@ STYLE_TITLE={
     'vertical-align':'middle',
 } 
 
-DEFAULT_PORTFOLIO_NAME=  './spdr_stocks.csv'
+DEFAULT_PORTFOLIO_NAME =  './spdr_stocks.csv'
+
+def create_instruction_divs():
+    mark_help_main = dgc.MarkdownComponent('general_help',
+            open('./markdown/markdown_quick_start.txt','r').read())
+    mark_sym_col = dgc.MarkdownComponent('symbol_help',
+            open('./markdown/markdown_symbol_column.txt','r').read())
+    mark_pos_col = dgc.MarkdownComponent('position_help',
+            open('./markdown/markdown_position_column.txt','r').read())
+    return [mark_help_main,mark_sym_col,mark_pos_col]
+
 
 def create_risk_summary_divs(logger,store_all_risk_dfs_comp):
-    def _value_from_risk_dict(input_list,risk_key):
-        risk_value =  input_list[0][risk_key]
+    def _value_from_risk_dict(input_list,risk_key,text=None):
+        locale.setlocale( locale.LC_ALL, '' )
+        risk_dict = input_list[0]
+        if not hasattr(risk_dict, 'keys'):
+            return ['']
+        risk_value =  risk_dict[risk_key]
         risk_value = round(float(str(risk_value)),2)
-        risk_text = f'{risk_key}: {risk_value}'
+        risk_value = locale.currency( risk_value, grouping=True )
+        t= text if text is not None else f'{risk_key}:'
+        risk_text = f'{t} {risk_value}'
         return [risk_text]
     
     var_1_99_div = dgc.DivComponent('var_1_99', 
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'port_var'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'port_var',text='Portfolio VaR:'), 
                 logger=logger)
     sp_equiv_div = dgc.DivComponent('sp_equiv', 
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'sp_dollar_equiv'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'sp_dollar_equiv',text='S&P Dollar Equivalent:'), 
                 logger=logger)
 
     port_delta_div = dgc.DivComponent('port_delta', 
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'delta'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'delta',text='Portfolio Delta:'), 
                 logger=logger)
     port_gamma_div = dgc.DivComponent('port_gamma', 
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'gamma'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'gamma',text='Portfolio Gamm:'),
                 logger=logger)
     port_vega_div = dgc.DivComponent('port_vega', 
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'vega'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'vega',text='Portfolio Vega:'), 
                 logger=logger)
     port_theta_div = dgc.DivComponent('port_theta',
                 input_component=store_all_risk_dfs_comp,
-                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'theta'), 
+                callback_input_transformer = lambda input_list:_value_from_risk_dict(input_list, 'theta',text='Portfolio Theta:'), 
                 logger=logger)
     return [var_1_99_div,sp_equiv_div,port_delta_div,port_gamma_div,port_vega_div,port_theta_div]
+
+
+def transform_risk_input_to_df(risk_dict,key_of_df,columns_to_show=None):
+    df = None
+    dict_this_risk = None
+    if len(risk_dict)>0:
+        dict_this_risk = risk_dict[key_of_df]
+        df = dgc.make_df(dict_this_risk)
+        if columns_to_show is not None:
+            df = df[columns_to_show]
+    return df
+
     
-def create_risk_dts(logger,store_all_risk_dfs_comp):
+def create_risk_dts(logger,store_all_risk_dfs_comp):    
     dt_risk1_comp = dgc.DashTableComponent('risk1',None,store_all_risk_dfs_comp,
                 title='Risk by Symbol',
                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_risk_all'),
@@ -117,30 +147,21 @@ def risk_data_closure(use_postgres=False,
     :param yahoo_daily_table:
     '''
     def create_risk_data(input_list):
-        if len(input_list)<1:
-            return None
-        dict_df = input_list[0]
-        df_portfolio = dgc.make_df(dict_df)
-        rt = risk_tables.RiskCalcs(
-            use_postgres=use_postgres, 
-            dburl=dburl, databasename=databasename, 
-            username=username, password=password, 
-            schema_name=schema_name, yahoo_daily_table=yahoo_daily_table)
-        
-        # Step 3: get an actual portfolio
-        risk_dict_dfs = rt.calculate(df_portfolio)
+        risk_dict_dfs = None
+        if len(input_list)>0:
+            dict_df = input_list[0]
+            df_portfolio = dgc.make_df(dict_df)
+            rt = risk_tables.RiskCalcs(
+                use_postgres=use_postgres, 
+                dburl=dburl, databasename=databasename, 
+                username=username, password=password, 
+                schema_name=schema_name, yahoo_daily_table=yahoo_daily_table)
+            
+            risk_dict_dfs = rt.calculate(df_portfolio)
+        print(f'create_risk_data {datetime.datetime.now()}')
         return risk_dict_dfs
     return create_risk_data
     
-def transform_risk_input_to_df(risk_dict,key_of_df,columns_to_show=None):
-    if len(risk_dict)<1:
-        return None
-    dict_df_var = risk_dict[key_of_df]
-    df = dgc.make_df(dict_df_var)
-    if columns_to_show is not None:
-        df = df[columns_to_show]
-    return df
-
 def dash_app(create_risk_data_method,
              dash_app_logger=None):
     '''
@@ -149,31 +170,28 @@ def dash_app(create_risk_data_method,
                                 to see how this method gets created
     :param dash_app_logger:
     '''
-    # create a logger
-    logger = dgc.li.init_root_logger('logfile.log','INFO') if dash_app_logger is None else dash_app_logger
+    # create an initial logger
+    logger = dgc.li.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
     
     top_div = html.Div([html.H3('Portfolio Risk Analysis'),
                 html.H4(' (See Quick Start at page bottom for help)')],
                 style=STYLE_TITLE)
     
+    df_init = pd.read_csv(DEFAULT_PORTFOLIO_NAME)    
+
     u1_comp = dgc.UploadComponent('u1',
-                'choose a csv portfolio file with symbol and position columns',
+                "CLICK TO UPLOAD A LOCAL CSV",
+                initial_data=df_init.to_dict('rows'),
                 logger=logger)
     
     h1_comp = dgc.UploadFileNameDiv('h1',u1_comp)
 
-    df_init = pd.read_csv(DEFAULT_PORTFOLIO_NAME)    
 
     dt1_comp = dgc.DashTableComponent('dt1',df_init,u1_comp,
                 title='Main Portfolio',
                 editable_columns=['position'],
                 logger=logger)
-    
-    logger = dt1_comp.logger
-#     dict_risk = create_risk_data_method([df_init.to_dict()])
-#     df_risk_all = dgc.make_df(dict_risk['df_risk_all'])
-#     df_risk_by_underlying = dgc.make_df(dict_risk['df_risk_by_underlying'])
-    
+        
     store_all_risk_dfs_comp = dgc.StoreComponent('store_all_risk_dfs', dt1_comp, 
             create_data_dictionary_from_df_transformer=create_risk_data_method, logger=logger)
     
@@ -181,38 +199,15 @@ def dash_app(create_risk_data_method,
     gr1_comp = dgc.XyGraphComponent('gr1',store_all_risk_dfs_comp,
                 x_column='symbol',
                 title='VaR Per Underlying Security',
-                transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_var',['symbol','position']),
+                transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_var',['symbol','position_var']),
                 logger=logger)    
 
-#     cols_to_round_dfra = [c for c in df_risk_all.columns.values if c not in ['symbol','underlying','position']]
-#     dt_risk1_comp = dgc.DashTableComponent('risk1',df_risk_all,store_all_risk_dfs_comp,
-#                 title='Risk by Symbol',
-#                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_risk_all',df_risk_all.columns.values),
-#                 logger=logger,columns_to_round=cols_to_round_dfra,digits_to_round=3)
-#  
-#     cols_to_round_dfru = [c for c in df_risk_all.columns.values if c not in ['symbol','underlying','position']]
-#     dt_risk2_comp = dgc.DashTableComponent('risk2',df_risk_by_underlying,store_all_risk_dfs_comp,
-#                 title='Risk by Underlying',
-#                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_risk_by_underlying',df_risk_by_underlying.columns.values),
-#                 logger=logger,columns_to_round=cols_to_round_dfru,digits_to_round=3)
-#  
-#     cols_to_round_corr_ret = [] # round all number columns
-#     dt_corr_returns = dgc.DashTableComponent('corr_returns',None,store_all_risk_dfs_comp,
-#                 title='Returns Correlations',
-#                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_corr'),
-#                 logger=logger,columns_to_round=cols_to_round_corr_ret,digits_to_round=4)
-#  
-#     dt_corr_price = dgc.DashTableComponent('corr_price',None,store_all_risk_dfs_comp,
-#                 title='Price Correlations',
-#                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_corr_price'),
-#                 logger=logger,columns_to_round=cols_to_round_corr_ret,digits_to_round=4)
-
     # create as list of all components that can be put in layout
-#     app_component_list = [top_div,u1_comp,h1_comp,store_all_risk_dfs_comp,dt1_comp,gr1_comp,dt_risk1_comp,dt_risk2_comp,dt_corr_returns,dt_corr_price]
     risk_summparies = create_risk_summary_divs(logger,store_all_risk_dfs_comp)
     risk_comps = create_risk_dts(logger,store_all_risk_dfs_comp)
-    app_component_list = [top_div,u1_comp,h1_comp,store_all_risk_dfs_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps
-    gtcl = ['1fr','50% 50%','1fr','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%']
+    help_comps = create_instruction_divs()
+    app_component_list = [top_div,u1_comp,h1_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + [store_all_risk_dfs_comp] + help_comps
+    gtcl = ['1fr','49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','1fr','50% 50%']
     
     app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)
     return app
