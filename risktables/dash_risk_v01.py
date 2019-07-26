@@ -11,14 +11,14 @@ The portfolio should have 2 colunns:
 @author: bperlman1
 '''
 import sys,os
-from risktables.risk_tables import DEFAULT_PORTFOLIO_NAME
 paths_to_add_to_sys_path = ['./','../','../../dashgrid','../../dashgrid/dashgrid']
 for p in paths_to_add_to_sys_path:
     if  not p in sys.path:
         sys.path.append(os.path.abspath(p))
     
 from risktables import risk_tables
-from dashgrid import dgrid_components as dgc
+# from dashgrid import dgrid_components as dgc
+from risktables import dgrid_components as dgc
 import dash_html_components as html
 import argparse as ap
 import pandas as pd
@@ -42,11 +42,24 @@ DEFAULT_PORTFOLIO_NAME =  './spdr_stocks.csv'
 def create_instruction_divs():
     mark_help_main = dgc.MarkdownComponent('general_help',
             open('./markdown/markdown_quick_start.txt','r').read())
+
+    dropdown_labels = ['Simple Stock Example','SPDR ETF Options example','Mixed with Commodities Example']
+    dropdown_values = ['example_simple_stocks.csv','spdr_stocks.csv','example_commodities.csv']
+#     file_download_component = dgc.FileDownLoadDiv('example_download', dropdown_labels, 
+#                         dropdown_values, 
+#                         'SELECT AN EXAMPLE CSV to Download',
+#                         'CLICK TO DOWNLOAD EXAMPLE CSV')
+
+    file_download_component = dgc.FiledownloadComponent('example_download', dropdown_labels, 
+                        dropdown_values, 
+                        'SELECT AN EXAMPLE CSV to Download',
+                        'CLICK TO DOWNLOAD EXAMPLE CSV')
+    
     mark_sym_col = dgc.MarkdownComponent('symbol_help',
             open('./markdown/markdown_symbol_column.txt','r').read())
     mark_pos_col = dgc.MarkdownComponent('position_help',
             open('./markdown/markdown_position_column.txt','r').read())
-    return [mark_help_main,mark_sym_col,mark_pos_col]
+    return [mark_help_main,file_download_component,mark_sym_col,mark_pos_col]
 
 
 def create_risk_summary_divs(logger,store_all_risk_dfs_comp):
@@ -147,18 +160,17 @@ def risk_data_closure(use_postgres=False,
     :param yahoo_daily_table:
     '''
     def create_risk_data(input_list):
-        risk_dict_dfs = None
-        if len(input_list)>0:
-            dict_df = input_list[0]
-            df_portfolio = dgc.make_df(dict_df)
-            rt = risk_tables.RiskCalcs(
-                use_postgres=use_postgres, 
-                dburl=dburl, databasename=databasename, 
-                username=username, password=password, 
-                schema_name=schema_name, yahoo_daily_table=yahoo_daily_table)
-            
-            risk_dict_dfs = rt.calculate(df_portfolio)
-        print(f'create_risk_data {datetime.datetime.now()}')
+        if len(input_list)<1:
+            return None
+        dict_df = input_list[0]
+        df_portfolio = dgc.make_df(dict_df)
+        rt = risk_tables.RiskCalcs(
+            use_postgres=use_postgres, 
+            dburl=dburl, databasename=databasename, 
+            username=username, password=password, 
+            schema_name=schema_name, yahoo_daily_table=yahoo_daily_table)
+        
+        risk_dict_dfs = rt.calculate(df_portfolio)
         return risk_dict_dfs
     return create_risk_data
     
@@ -171,7 +183,7 @@ def dash_app(create_risk_data_method,
     :param dash_app_logger:
     '''
     # create an initial logger
-    logger = dgc.li.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
+    logger = dgc.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
     
     top_div = html.Div([html.H3('Portfolio Risk Analysis'),
                 html.H4(' (See Quick Start at page bottom for help)')],
@@ -206,8 +218,11 @@ def dash_app(create_risk_data_method,
     risk_summparies = create_risk_summary_divs(logger,store_all_risk_dfs_comp)
     risk_comps = create_risk_dts(logger,store_all_risk_dfs_comp)
     help_comps = create_instruction_divs()
+
+    
+    
     app_component_list = [top_div,u1_comp,h1_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + [store_all_risk_dfs_comp] + help_comps
-    gtcl = ['1fr','49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','1fr','50% 50%']
+    gtcl = ['1fr','49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','100%','50% 50%']
     
     app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)
     return app
