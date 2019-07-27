@@ -81,6 +81,7 @@ def update_risk_data(df,temp_folder,use_postgres=False,
     if len(df[df.position.isna()])>0:
         error_message = 'position column has missing data.'
     try:
+        df.position = df.position.astype(float)
         df.position.sum()
     except:
         error_message = 'position column has invalid non-numeric values.'        

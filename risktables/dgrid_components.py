@@ -100,7 +100,7 @@ blue_button_style={
 #     'borderStyle': borderline,
 #     'borderRadius': '1px',
     'textAlign': 'center',
-    'background-color':'#A9D0F5',
+    'background-color':'#A9D0F5',#ed4e4e
     'vertical-align':'middle',
 }
 
@@ -142,7 +142,8 @@ class GridItem():
         else:
             return html.Div(children=self.child,className='grid-item')
 
-def create_grid(component_array,num_columns=2,column_width_percents=None,additional_grid_properties_dict=None):
+def create_grid(component_array,num_columns=2,column_width_percents=None,additional_grid_properties_dict=None,
+                wrap_in_loading_state=False):
     gs = grid_style.copy()
     percents = [str(round(100/num_columns-.001,1))+'%' for _ in range(num_columns)] if column_width_percents is None else [str(c)+'%' for c in column_width_percents]
     perc_string = " ".join(percents)
@@ -160,7 +161,10 @@ def create_grid(component_array,num_columns=2,column_width_percents=None,additio
             div_children.append(c.html)
         else:
             div_children.append(c)
-    g = html.Div(div_children,style=gs)
+    if wrap_in_loading_state:
+        g = dcc.Loading(html.Div(div_children,style=gs),type='cube')
+    else:
+        g = html.Div(div_children,style=gs)
     return g
 
 
@@ -334,6 +338,7 @@ def plotly_plot(df_in,x_column,plot_title=None,
                 y_left_label=None,y_right_label=None,
                 bar_plot=True,figsize=(16,10),
                 number_of_ticks_display=20,
+                marker_color=None,
                 yaxis2_cols=None):
     '''
     Create a plotly.graph_objs.Graph figure.  The caller provides a Pandas DataFrame,
@@ -364,6 +369,8 @@ def plotly_plot(df_in,x_column,plot_title=None,
     for ycol in ycols:
         if bar_plot:
             b = go.Bar(x=td,y=df_in[ycol],name=ycol,yaxis='y' if ycol not in ya2c else 'y2')
+            if marker_color is not None:                
+                b.marker=dict(color=marker_color)                
         else:
             b = go.Scatter(x=td,y=df_in[ycol],name=ycol,yaxis='y' if ycol not in ya2c else 'y2')
         data.append(b)
@@ -657,8 +664,8 @@ class  ComponentWrapper():
         
         if self.callback_input_transformer is None:
             self.callback_input_transformer = _default_transform
-#         self.div = html.Div([self.component])
-        self.div = dcc.Loading(children=html.Div([self.component]),type=loading_state)
+        self.div = html.Div([self.component])
+#         self.div = dcc.Loading(children=html.Div([self.component]),type=loading_state)
 
 
         
@@ -873,6 +880,7 @@ class XyGraphComponent(ComponentWrapper):
     def __init__(self,component_id,input_component,x_column,
                  transform_input=None,
                  plot_bars=True,title=None,
+                 marker_color=None,
                  style=None,logger=None):
         
         self.logger = init_root_logger(DEFAULT_LOG_PATH, DEFAULT_LOG_LEVEL) if logger is None else logger
@@ -884,7 +892,8 @@ class XyGraphComponent(ComponentWrapper):
 
         # add component_id and html_id to self
         self.component_id = component_id
-        gr_html = make_chart_html(component_id,None,x_column,plot_title=t)
+        gr_html = make_chart_html(component_id,None,
+                    x_column,plot_title=t,marker_color=marker_color)
 
         # define dash_table callback using closure so that you don't refer back to 
         #   class instance during the callback
@@ -899,7 +908,8 @@ class XyGraphComponent(ComponentWrapper):
                         else:
                             df = make_df(value_list[0])
                         if df is not None:
-                            fig = plotly_plot(df,x_column,plot_title=plot_title,bar_plot=plot_bars)
+                            fig = plotly_plot(df,x_column,
+                                    plot_title=plot_title,bar_plot=plot_bars,marker_color=marker_color)
                             ret =  [fig]
                 except Exception as e:
                     traceback.print_exc()
@@ -1124,17 +1134,15 @@ class FileDownLoadDiv():
         return download_csv
 
 
-def make_app(app_component_list,grid_template_columns_list=None,app=None):
-    components_with_callbacks = []
-    layout_components = []
-    
-    # get layout template list (lot)
-    default_gtcl = ('1fr '* len(app_component_list))[:-1]
-    gtcl = default_gtcl if grid_template_columns_list is None else grid_template_columns_list
-    
+def recursive_grid_layout(app_component_list,current_component_index,gtcl,layout_components,wrap_in_loading_state=False):
     # loop through the gtcl, and assign components to grids
-    current_component_index = 0
     for grid_template_columns in gtcl:
+        if type(grid_template_columns)==list:
+            layout_components.append(recursive_grid_layout(
+                app_component_list,current_component_index, grid_template_columns, 
+                layout_components,wrap_in_loading_state=True))
+            continue
+        # if this grid_template_columns item is NOT a list, process it normally
         sub_list_grid_components = []
         num_of_components_in_sublist = len(grid_template_columns.split(' '))
         for _ in range(num_of_components_in_sublist):
@@ -1145,8 +1153,41 @@ def make_app(app_component_list,grid_template_columns_list=None,app=None):
                 layout_ac = layout_ac.html
             sub_list_grid_components.append(layout_ac)
             current_component_index +=1
-        new_grid = create_grid(sub_list_grid_components, additional_grid_properties_dict={'grid-template-columns':grid_template_columns})
+        new_grid = create_grid(sub_list_grid_components, 
+                        additional_grid_properties_dict={'grid-template-columns':grid_template_columns},
+                        wrap_in_loading_state=wrap_in_loading_state)
         layout_components.append(new_grid)
+
+
+
+def make_app(app_component_list,grid_template_columns_list=None,app=None):
+    components_with_callbacks = []
+    layout_components = []
+    
+    # get layout template list (lot)
+    default_gtcl = ('1fr '* len(app_component_list))[:-1]
+    gtcl = default_gtcl if grid_template_columns_list is None else grid_template_columns_list
+    
+#     # loop through the gtcl, and assign components to grids
+#     current_component_index = 0
+#     for grid_template_columns in gtcl:
+#         sub_list_grid_components = []
+#         num_of_components_in_sublist = len(grid_template_columns.split(' '))
+#         for _ in range(num_of_components_in_sublist):
+#             # get the current component
+#             layout_ac = app_component_list[current_component_index]
+#             # add either the component, or it's html property to the sublist
+#             if hasattr(layout_ac, 'html'):
+#                 layout_ac = layout_ac.html
+#             sub_list_grid_components.append(layout_ac)
+#             current_component_index +=1
+#         new_grid = create_grid(sub_list_grid_components, additional_grid_properties_dict={'grid-template-columns':grid_template_columns})
+#         layout_components.append(new_grid)
+
+    # populate layout_components using recursive algo
+    recursive_grid_layout(app_component_list,0,gtcl,layout_components)
+    ret_app =   dash.Dash() if app is None else app
+    ret_app.layout = html.Div(layout_components,style={'margin-left':'10px','margin-right':'10px'})
     
     ret_app =   dash.Dash() if app is None else app
     ret_app.layout = html.Div(layout_components,style={'margin-left':'10px','margin-right':'10px'})

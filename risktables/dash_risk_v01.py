@@ -17,7 +17,6 @@ for p in paths_to_add_to_sys_path:
         sys.path.append(os.path.abspath(p))
     
 from risktables import risk_tables
-# from dashgrid import dgrid_components as dgc
 from risktables import dgrid_components as dgc
 import dash_html_components as html
 import argparse as ap
@@ -32,7 +31,8 @@ STYLE_TITLE={
 #     'borderStyle': 'none',
 #     'borderRadius': '1px',
     'textAlign': 'center',
-    'background-color':'#21618C',
+#     'background-color':'#21618C',
+    'background-color':'#47bacc',
     'color':'#FFFFF9',
     'vertical-align':'middle',
 } 
@@ -187,18 +187,21 @@ def dash_app(create_risk_data_method,
     # create an initial logger
     logger = dgc.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
     
-    top_div = html.Div([html.H3('Portfolio Risk Analysis'),
+    top_div = html.Div([html.H1('Portfolio Risk Analysis'),
                 html.H4(' (See Quick Start at page bottom for help)')],
                 style=STYLE_TITLE)
     
     df_init = pd.read_csv(DEFAULT_PORTFOLIO_NAME)    
 
+    yellow_style=dgc.blue_button_style.copy()
+    yellow_style['background-color'] = '#f2d472'
     u1_comp = dgc.UploadComponent('u1',
                 "CLICK TO UPLOAD A LOCAL CSV",
                 initial_data=df_init.to_dict('rows'),
+                style=yellow_style,
                 logger=logger)
     
-    h1_comp = dgc.UploadFileNameDiv('h1',u1_comp)
+    h1_comp = dgc.UploadFileNameDiv('h1',u1_comp,style=yellow_style)
 
 
     dt1_comp = dgc.DashTableComponent('dt1',df_init,u1_comp,
@@ -213,6 +216,7 @@ def dash_app(create_risk_data_method,
     gr1_comp = dgc.XyGraphComponent('gr1',store_all_risk_dfs_comp,
                 x_column='symbol',
                 title='VaR Per Underlying Security',
+                marker_color='#7e8ed9',
                 transform_input=lambda risk_dict: transform_risk_input_to_df(risk_dict,'df_var',['symbol','position_var']),
                 logger=logger)    
 
@@ -224,7 +228,8 @@ def dash_app(create_risk_data_method,
     
     
     app_component_list = [top_div,u1_comp,h1_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + [store_all_risk_dfs_comp] + help_comps
-    gtcl = ['1fr','49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','100%','50% 50%']
+#     gtcl = ['1fr','49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','100%','50% 50%']
+    gtcl = ['1fr',['49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','100%','50% 50%']]
     
     app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)
     return app
