@@ -692,8 +692,8 @@ def stop_callback(errmess,logger=None):
     m = "****************************** " + errmess + " ***************************************"     
     if logger is not None:
         logger.debug(m)
-    raise PreventUpdate()
-#     raise ValueError(m)
+#     raise PreventUpdate()
+    raise ValueError(m)
 # ************************ Define the classes that inherit dgrid.ComponentWrapper ************************
 
 class DivComponent(ComponentWrapper):
@@ -1023,6 +1023,11 @@ class StoreComponent(ComponentWrapper):
         
         self.callback_input_transformer  = _create_callback_lambda(component_id,
                                 create_data_dictionary_from_df_transformer, self.logger) 
+        self.dcc_store = dcc_store
+        
+    @ComponentWrapper.html.getter
+    def html(self):
+        return dcc.Loading(children=[self.dcc_store],type='cube')
 
 class FiledownloadComponent(ComponentWrapper):
     def __init__(self,component_id,
@@ -1140,7 +1145,8 @@ def recursive_grid_layout(app_component_list,current_component_index,gtcl,layout
         if type(grid_template_columns)==list:
             layout_components.append(recursive_grid_layout(
                 app_component_list,current_component_index, grid_template_columns, 
-                layout_components,wrap_in_loading_state=True))
+#                 layout_components,wrap_in_loading_state=True))
+                layout_components,wrap_in_loading_state=False))
             continue
         # if this grid_template_columns item is NOT a list, process it normally
         sub_list_grid_components = []
