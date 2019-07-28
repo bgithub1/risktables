@@ -692,8 +692,8 @@ def stop_callback(errmess,logger=None):
     m = "****************************** " + errmess + " ***************************************"     
     if logger is not None:
         logger.debug(m)
-#     raise PreventUpdate()
-    raise ValueError(m)
+    raise PreventUpdate()
+#     raise ValueError(m)
 # ************************ Define the classes that inherit dgrid.ComponentWrapper ************************
 
 class DivComponent(ComponentWrapper):
@@ -1174,22 +1174,6 @@ def make_app(app_component_list,grid_template_columns_list=None,app=None):
     default_gtcl = ('1fr '* len(app_component_list))[:-1]
     gtcl = default_gtcl if grid_template_columns_list is None else grid_template_columns_list
     
-#     # loop through the gtcl, and assign components to grids
-#     current_component_index = 0
-#     for grid_template_columns in gtcl:
-#         sub_list_grid_components = []
-#         num_of_components_in_sublist = len(grid_template_columns.split(' '))
-#         for _ in range(num_of_components_in_sublist):
-#             # get the current component
-#             layout_ac = app_component_list[current_component_index]
-#             # add either the component, or it's html property to the sublist
-#             if hasattr(layout_ac, 'html'):
-#                 layout_ac = layout_ac.html
-#             sub_list_grid_components.append(layout_ac)
-#             current_component_index +=1
-#         new_grid = create_grid(sub_list_grid_components, additional_grid_properties_dict={'grid-template-columns':grid_template_columns})
-#         layout_components.append(new_grid)
-
     # populate layout_components using recursive algo
     recursive_grid_layout(app_component_list,0,gtcl,layout_components)
     ret_app =   dash.Dash() if app is None else app
@@ -1208,5 +1192,32 @@ def make_app(app_component_list,grid_template_columns_list=None,app=None):
     [c.callback(ret_app) for c in components_with_callbacks]
     return ret_app
         
+def make_multi_page_app(page_dict,app=None):
+    layout_dict = {}
+    ret_app =   dash.Dash() if app is None else app
+    ret_app.config.suppress_callback_exceptions = True
 
+    for page_address in page_dict.keys():
+        page_sub_dict = page_dict[page_address]
+        grid_template_columns_list = page_sub_dict['gtcl']
+        app_component_list = page_sub_dict['app_component_list']
+        make_app(app_component_list,
+                            grid_template_columns_list,ret_app)
+        layout_dict[page_address] = ret_app.layout
+        ret_app.layout=html.Div()
+     
+    ret_app.layout = html.Div([
+        dcc.Location(id='url',refresh=False),
+        html.Div(id='page_content')])
+    
+    @ret_app.callback(
+        Output('page_content', 'children'),
+        [Input('url', 'pathname')])
+    def display_page(pathname):
+#         return 'hello world'
+        ret_layout = layout_dict[pathname]
+        return ret_layout
+    
+    return ret_app
+    
 

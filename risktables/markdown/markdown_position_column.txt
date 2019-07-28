@@ -5,7 +5,7 @@
    * 10 IBM trading @ $190 = $1900
  * Commodities position sizes **ARE NOT CONTRACTS**
    * -10 CLQ19 trading @ $36.25 = -$362.50 
-     * *(NOT -$362,500.00)*
+     * **(NOT -$362,500.00)**
    * 10 ZSU19 trading @ 925 = $9,250 
-     * *(NOT 9.25 * 5000 = $46,250.00)*
+     * **(NOT 9.25 * 5000 = $46,250.00)**
        

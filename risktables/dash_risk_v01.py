@@ -41,7 +41,7 @@ DEFAULT_PORTFOLIO_NAME =  './spdr_stocks.csv'
 
 def create_instruction_divs():
     mark_help_main = dgc.MarkdownComponent('general_help',
-            open('./markdown/markdown_quick_start.txt','r').read())
+                        open('./markdown/markdown_quick_start.txt','r').read())
 
     dropdown_labels = ['Simple Stock Example','SPDR ETF Options example','Mixed with Commodities Example']
     dropdown_values = ['example_simple_stocks.csv','spdr_stocks.csv','example_commodities.csv']
@@ -187,9 +187,11 @@ def dash_app(create_risk_data_method,
     # create an initial logger
     logger = dgc.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
     
-    top_div = html.Div([html.H1('Portfolio Risk Analysis'),
-                html.H4(' (See Quick Start at page bottom for help)')],
-                style=STYLE_TITLE)
+    top_div = html.Div([
+                        html.H1('Portfolio Risk Analysis'),
+                        html.A(html.H4(' (See Quick Start at page bottom for help)'),href='#general_help')
+                ],
+                style=STYLE_TITLE,id='top_div')
     
     df_init = pd.read_csv(DEFAULT_PORTFOLIO_NAME)    
 
@@ -227,12 +229,10 @@ def dash_app(create_risk_data_method,
 
     
     
-#     app_component_list = [top_div,u1_comp,h1_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + [store_all_risk_dfs_comp] + help_comps
-#     gtcl = ['1fr',['49.7% 49.7%','50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','100%','50% 50%']]
+    
     app_component_list = [top_div,u1_comp,h1_comp] + [store_all_risk_dfs_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + help_comps
     gtcl = ['1fr','49.7% 49.7%','100%',['50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','50% 50%']]
-    
-    app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)
+    app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)    
     return app
 
 if __name__=='__main__':
@@ -261,7 +261,7 @@ if __name__=='__main__':
                     username=s['username'], password=s['password'], 
                     schema_name=s['schema_name'], 
                     yahoo_daily_table=s['table_names'])
-    app = dash_app(create_risk_data_method)
+    app = dash_app(create_risk_data_method)    
     app.run_server(host=args.host,port=args.port)
 
 
