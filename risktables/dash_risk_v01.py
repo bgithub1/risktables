@@ -187,9 +187,23 @@ def dash_app(create_risk_data_method,
     # create an initial logger
     logger = dgc.init_root_logger('logfile.log','WARN') if dash_app_logger is None else dash_app_logger
     
+#     top_div = html.Div([
+#                         html.H1('Dash Portfolio Risk Analysis'),
+#                         html.Span(children=[
+#                             html.A('(See Quick Start at page bottom for help)',href='#general_help',style={'font-size' : '16px'}),
+#                             '     ',
+#                             html.A('(Click for github code to project)',href='https://github.com/bgithub1/risktables.git',style={'font-size' : '16px'},target="_blank")
+#                         ])
+#                 ],
+#                 style=STYLE_TITLE,id='top_div')
+
     top_div = html.Div([
-                        html.H1('Portfolio Risk Analysis'),
-                        html.A(html.H4(' (See Quick Start at page bottom for help)'),href='#general_help')
+                        dgc.dcc.Markdown('''
+                        # Dash Portfolio Risk Analysis
+                        [(Click for Quick Start at page bottom)](#general_help) &nbsp; &nbsp; &nbsp; [(Click for github code to project)](https://github.com/bgithub1/risktables.git)
+                        
+                        '''
+                        ,style={'color':'white'})
                 ],
                 style=STYLE_TITLE,id='top_div')
     
