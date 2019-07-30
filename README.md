@@ -18,14 +18,24 @@ ___
 1. Make sure you have Jupyter installed:
  * ```python3 -m pip install --upgrade pip```
  * ```python3 -m pip install jupyter```
-1. cd risktables/risktables    # set your working directory to the risktables **PACKAGE**, as opposed to the risktables **project**
-2. from a bash terminal, launch Jupyter
+2. cd risktables/risktables    # set your working directory to the risktables **PACKAGE**, as opposed to the risktables **project**
+3. from a bash terminal, launch Jupyter
  * ```jupyter notebook```
-3. When the jupyter notebook webpage appears, select the .ipynb file ```dgrid_components_example_v01.ipynb```
-4. Run all the cells in this notebook.
+4. When the jupyter notebook webpage appears, select the .ipynb file ```dgrid_components_example_v01.ipynb```
+5. Run all the cells in this notebook.
  * The first several cells create a Pandas DataFrame called ```df_pseudo```, which creates open,high,low, and close data generated from a random walk, as well as a plotly python candlestick chart of that data.
  * The cells that follow the candlestick chart run a Plot.ly Dash web app that displays the same DataFrame and chart, using classes from the ```dgrid_components.py``` module.
-5. Open a web browser and enter: ```localhost:8500``` in the address bar.
+6. Open a web browser and enter: ```localhost:8500``` in the address bar.
+___
+
+### Run the risk_example_1.ipynb notebook
+1. Make sure you have Jupyter installed (see above)
+2. cd risktables/risktables
+3. from a bash terminal, launch Jupyter
+ * ```jupyter notebook```
+4. When the jupyter notebook webpage appears, select the .ipynb file ```risk_example_1.ipynb```
+5. Run all the cells in this notebook.
+
 ___
 ### Launching the full portfolio risk web app
 1. Navigate to risktables/risktables
