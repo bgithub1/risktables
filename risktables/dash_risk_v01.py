@@ -264,7 +264,7 @@ if __name__=='__main__':
     config_name = args.database_config_name
     
     if config_name is  None:
-        risk_data_callback = risk_data_closure()
+        create_risk_data_method = risk_data_closure()
     else:
         df_this_config = df_pg_info[df_pg_info.config_name==config_name].fillna('')
         if len(df_this_config)<1:
