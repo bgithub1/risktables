@@ -80,7 +80,7 @@ class HistoryBuilder():
         self.temp_folder = temp_folder
         self.STOCKS_DIR = f'{temp_folder}/stocks' if STOCKS_DIR is None else STOCKS_DIR
         self.bch = self.get_barchart_api()
-        self.logger = logger if dburl is not None else li.init_root_logger('logfile.log', 'INFO')
+        self.logger = logger if logger is not None else li.init_root_logger('logfile.log', 'INFO')
         self.dburl = dburl if dburl is not None else 'localhost'
         self.username = username 
         self.password = password 

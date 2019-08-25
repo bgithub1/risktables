@@ -25,6 +25,10 @@ if __name__ == '__main__':
     parser.add_argument('--postgres_info_path',type=str,
         help='path to postgres_info.csv file that holds postgres login, schema and table info for each db',
         default='./postgres_info.csv')
+    parser.add_argument('--calculate_hedge_ratio',
+        default=False,action='store_true',
+         help='set to True if calculating hedge portfolio using Sector Spdr ETFs')
+                
     args = parser.parse_args()
     
     # Step 1: get postgres info
@@ -40,7 +44,8 @@ if __name__ == '__main__':
         username=s.username.values[0], 
         password=s.password.values[0], 
         schema_name=s.schema_name.values[0], 
-        yahoo_daily_table=s.table_names.values[0])
+        yahoo_daily_table=s.table_names.values[0],
+        calculate_hedge_ratio=args.calculate_hedge_ratio)
     
     # Step 3: get an actual portfolio
     df_portfolio = pd.read_csv(args.initial_portfolio)

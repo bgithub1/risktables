@@ -211,6 +211,7 @@ class RiskCalcs():
         password=None,
         schema_name=None,
         yahoo_daily_table=None,
+        calculate_hedge_ratio=False,
         temp_folder='./temp_folder',
         logger=None):
         
@@ -222,6 +223,7 @@ class RiskCalcs():
         self.schema_name = schema_name
         self.yahoo_daily_table = yahoo_daily_table
         self.temp_folder = temp_folder
+        self.calculate_hedge_ratio = calculate_hedge_ratio
         self.logger = dgc.init_root_logger() if logger is None else logger
         
     def calculate(self,df):
@@ -229,7 +231,8 @@ class RiskCalcs():
                 dburl=self.dburl, databasename=self.databasename, 
                 username=self.username, password=self.password, 
                 schema_name=self.schema_name, 
-                yahoo_daily_table=self.yahoo_daily_table,logger=self.logger)
+                yahoo_daily_table=self.yahoo_daily_table,
+                calculate_hedge_ratio=self.calculate_hedge_ratio,logger=self.logger)
         
         
         
