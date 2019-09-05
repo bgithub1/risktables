@@ -266,7 +266,10 @@ if __name__=='__main__':
                     username=s['username'], password=s['password'], 
                     schema_name=s['schema_name'], 
                     yahoo_daily_table=s['table_names'])
-    app = dash_app(create_risk_data_method)    
+    app = dash_app(create_risk_data_method)
+    app.css.config.serve_locally = True
+    app.scripts.config.serve_locally = True
+        
     app.run_server(host=args.host,port=args.port)
 
 
