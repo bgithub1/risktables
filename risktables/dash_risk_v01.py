@@ -239,6 +239,7 @@ def dash_app(create_risk_data_method,
     app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)    
     return app
 
+
 if __name__=='__main__':
     df_pg_info = pd.read_csv('./postgres_info.csv')
     postgres_config_names = ' '.join(df_pg_info.config_name.values)
