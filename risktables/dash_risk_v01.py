@@ -66,7 +66,7 @@ def create_risk_summary_divs(logger,store_all_risk_dfs_comp):
     def _value_from_risk_dict(input_list,risk_key,text=None):
         locale.setlocale( locale.LC_ALL, 'en_CA.UTF-8' )
         risk_dict = input_list[0]
-        if not hasattr(risk_dict, 'keys'):
+        if not hasattr(risk_dict, 'keys') or risk_key not in risk_dict.keys():
             return ['']
         risk_value =  risk_dict[risk_key]
         risk_value = round(float(str(risk_value)),2)
