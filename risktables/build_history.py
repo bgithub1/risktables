@@ -82,8 +82,8 @@ class HistoryBuilder():
         self.bch = self.get_barchart_api()
         self.logger = logger if logger is not None else li.init_root_logger('logfile.log', 'INFO')
         self.dburl = dburl if dburl is not None else 'localhost'
-        self.username = username 
-        self.password = password 
+        self.username = '' if username is None else username 
+        self.password = '' if password is None else password
         self.databasename = databasename if databasename is not None else 'testdb'
         self.schema_name = schema_name if schema_name is not None else 'test_schema'
         self.yahoo_daily_table = yahoo_daily_table if yahoo_daily_table is not None else 'yahoo_daily'
@@ -451,14 +451,24 @@ if __name__ == '__main__':
         minute = args.beg_date_yyyymmddhhmmss[10:12] if len(args.beg_date_yyyymmddhhmmss)>10 else 1
         second =  args.beg_date_yyyymmddhhmmss[12:14] if len(args.beg_date_yyyymmddhhmmss)>12 else 1
         beg_date = dt.datetime(yyyy,month,day,hour,minute,second)
-    
+
     hb = HistoryBuilder(
-        args.delete_schema, args.delete_table, 
-        args.fetch_from_yahoo, args.build_table, args.update_table, 
-        beg_date, end_date, args.dburl, 
-        args.databasename, args.username, args.password, 
-        args.schema_name, args.yahoo_daily_table, args.initial_symbol_list, 
-        args.days_to_fetch, logger)
+        delete_schema=args.delete_schema, 
+        delete_table=args.delete_table, 
+        fetch_from_yahoo=args.fetch_from_yahoo, 
+        build_table=args.build_table, 
+        update_table=args.update_table, 
+        beg_date=beg_date, 
+        end_date=end_date, 
+        dburl=args.dburl, 
+        databasename=args.databasename, 
+        username=args.username, 
+        password=args.password, 
+        schema_name=args.schema_name, 
+        yahoo_daily_table=args.yahoo_daily_table, 
+        initial_symbol_list=args.initial_symbol_list, 
+        days_to_fetch=args.days_to_fetch, 
+        logger=logger)
     
     hb.execute()
     end_time = dt.datetime.now()
