@@ -8,9 +8,9 @@ then
   exit
 fi
 #to do linux install:
-apt-get install postgresql postgresql-contrib
+sudo apt-get install postgresql postgresql-contrib
 # start it
-service postgresql start
+sudo service postgresql start
 echo now execute the following commands manually
 echo sudo -i -u postgres
 echo createdb testdb
