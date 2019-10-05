@@ -5,7 +5,7 @@ then
    flask_port=8888
 fi
 
-virtualenv_path="$2"
+virtualenv_path="$2"i
 if [[ -z ${virtualenv_path} ]]
 then
    virtualenv_path="~/Virtualenvs3/dashrisk2"
@@ -20,7 +20,7 @@ fi
 
 
 mip=$(ifconfig|grep -A 1 eth0 | grep inet|egrep -o "addr[:][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}"|egrep -o "[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}")
-if [[ -z $4 ]]
+if [[ ! -z $4 ]]
 then
     mip="$4"
 fi
