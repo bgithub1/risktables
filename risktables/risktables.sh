@@ -5,7 +5,7 @@ then
    flask_port=8888
 fi
 
-virtualenv_path="$2"i
+virtualenv_path="$2"
 if [[ -z ${virtualenv_path} ]]
 then
    virtualenv_path="~/Virtualenvs3/dashrisk2"
@@ -25,10 +25,9 @@ then
     mip="$4"
 fi
 
-source ${virtualenv_path}/bin/activate
 
 source ${virtualenv_path}/bin/activate
 cd ${workspace}/risktables/risktables
-python3 -i dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name dashrisk_jrtr
+python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name dashrisk_jrtr
 cd ~
 deactivate
