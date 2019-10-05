@@ -8,7 +8,7 @@ then
   exit
 fi
 #to do linux install:
-sudo apt-get install postgresql postgresql-contrib
+sudo apt-get install postgresql postgresql-contrib python-psycopg2 libpq-dev
 # start it
 sudo service postgresql start
 echo now execute the following commands manually

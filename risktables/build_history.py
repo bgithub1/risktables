@@ -98,6 +98,8 @@ class HistoryBuilder():
         except:
             pass
         for sym,df in hist_dict.items():
+            if len(df)<=0:
+                continue
             csv_path = f'{self.STOCKS_DIR}/{sym}.csv'
             self.logger.info(f'writing {sym} to {csv_path}')
             df['Date'] = df.index
