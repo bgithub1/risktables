@@ -1,4 +1,4 @@
-# bash risktables.sh 8888 ~/Virtualenvs3/dashrisk2
+# bash risktables.sh 8888 ~/Virtualenvs3/dashrisk2 ~/pyliverisk 127.0.0.1
 flask_port=$1
 if [[ -z ${flask_port} ]]
 then
@@ -17,7 +17,14 @@ then
    workspace="~/pyliverisk"
 fi
 
+
+
 mip=$(ifconfig|grep -A 1 eth0 | grep inet|egrep -o "addr[:][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}"|egrep -o "[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}")
+if [[ -z $4 ]]
+then
+    mip="$4"
+fi
+
 source ${virtualenv_path}/bin/activate
 
 source ${virtualenv_path}/bin/activate
