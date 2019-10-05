@@ -14,7 +14,7 @@ fi
 workspace="$3"
 if [[ -z ${workspace} ]]
 then
-   workspace="~/pyworkspace/pyliverisk"
+   workspace="~/pyliverisk"
 fi
 
 mip=$(ifconfig|grep -A 1 eth0 | grep inet|egrep -o "addr[:][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}"|egrep -o "[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}")
