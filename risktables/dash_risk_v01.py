@@ -177,7 +177,7 @@ def risk_data_closure(use_postgres=False,
     return create_risk_data
     
 def dash_app(create_risk_data_method,
-             dash_app_logger=None):
+             dash_app_logger=None,app_to_use=None):
     '''
     
     :param create_risk_data_method: a method that has one input, which is a list.  See the closure method risk_data_closure
@@ -236,7 +236,7 @@ def dash_app(create_risk_data_method,
     
     app_component_list = [top_div,u1_comp,h1_comp] + [store_all_risk_dfs_comp] + risk_summparies + [dt1_comp,gr1_comp] + risk_comps + help_comps
     gtcl = ['1fr','49.7% 49.7%','100%',['50% 50%','25% 25% 25% 25%','50% 50%','50% 50%','50% 50%','100%','1fr','100%','50% 50%']]
-    app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl)    
+    app = dgc.make_app(app_component_list,grid_template_columns_list=gtcl,app=app_to_use)    
     return app
 
 
@@ -250,7 +250,8 @@ if __name__=='__main__':
                         help='initial portfolio to Load')
     parser.add_argument('--database_config_name',type=str,nargs='?',
                         help=f'IF not specified, do not use postgres.  If used, one of {postgres_config_names}')
-
+    parser.add_argument('--additional_route',type=str,nargs='?',
+                        help='the additional URI, if needed (like /oilgas or /risk if the full URL has to include it')
     args = parser.parse_args()
     config_name = args.database_config_name
     
@@ -266,7 +267,11 @@ if __name__=='__main__':
                     username=s['username'], password=s['password'], 
                     schema_name=s['schema_name'], 
                     yahoo_daily_table=s['table_names'])
-    app = dash_app(create_risk_data_method)
+    app_to_use = None
+    if args.additional_route is not None:
+        app_to_use = dgc.dash.Dash(url_base_pathname=args.additional_route)
+        
+    app = dash_app(create_risk_data_method,app_to_use=app_to_use)
     app.css.config.serve_locally = True
     app.scripts.config.serve_locally = True
         
