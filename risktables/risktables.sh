@@ -28,6 +28,6 @@ fi
 
 source ${virtualenv_path}/bin/activate
 cd ${workspace}/risktables/risktables
-python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name dashrisk_jrtr
+python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name dashrisk_jrtr --additional_route /risk/
 cd ~
 deactivate
