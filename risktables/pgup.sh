@@ -2,7 +2,7 @@
 # example: run at 5 AM, get 5 new prices, and use virtualenv Virtualenv3/dashrisk2
 # bash pgup.sh postgres dbpassword 
 # example: run at 7 PM, get 10 new prices, and use virtualenv Virtualenv3/mycustomenv
-# bash pgup.sh postgres dbpassword 19 10 Virtualenv3/mycustomenv
+# bash pgup.sh postgres dbpassword 19 10 ~/Virtualenv3/mycustomenv
 #
 username=${1}
 if [[ -z ${username} ]];then
