@@ -1,4 +1,8 @@
 # bash risktables.sh 8888 ~/Virtualenvs3/dashrisk2 ~/pyliverisk 127.0.0.1
+# use $(cd ../../;pwd) as the workspace
+# bash risktables.sh 8700 ~/Virtualenvs3/dashrisk2 $(cd ../../;pwd) 127.0.0.1
+# specify a specific row in postgres_info.csv
+# bash risktables.sh 8700 ~/Virtualenvs3/dashrisk2 $(cd ../../;pwd) 127.0.0.1 dashrisk_local
 flask_port=$1
 if [[ -z ${flask_port} ]]
 then
@@ -25,9 +29,14 @@ then
     mip="$4"
 fi
 
+config_name="${5}"
+if [[ -z ${config_name} ]]
+then
+   config_name="dashrisk_jrtr"
+fi
 
 source ${virtualenv_path}/bin/activate
 cd ${workspace}/risktables/risktables
-python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name dashrisk_jrtr --additional_route /risk/
+python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name ${config_name} --additional_route /risk/
 cd ~
 deactivate

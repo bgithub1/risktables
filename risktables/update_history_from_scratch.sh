@@ -1,6 +1,6 @@
 # execute the build_history.py --delete_schema True --fetch_from_yahoo True --build_table True
 # example usage:
-# bash update_history_from_scratch.sh dbusername dbpassword ~/Virtualenv3/dashrisk2 
+# bash update_history_from_scratch.sh dbusername dbpassword ~/Virtualenvs3/dashrisk2 
 #
 uname=$1
 passw=$2
