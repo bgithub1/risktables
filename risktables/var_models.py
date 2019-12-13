@@ -180,6 +180,8 @@ class VarModel():
     def fetch_portfolio_history(self):
         symbols = list(set(self.df_portfolio.underlying.as_matrix().reshape(-1)))
         history_dict = {}
+        self.logger.info(f'fetch_portfolio_history: dt_beg:{self.dt_beg} dt_end:{self.dt_end}')
+        print(f'fetch_portfolio_history: dt_beg:{self.dt_beg} dt_end:{self.dt_end}')
         for symbol in set(symbols):
             try:
                 history_dict[symbol] = self.history_fetcher.fetch_history(symbol, self.dt_beg, self.dt_end)
