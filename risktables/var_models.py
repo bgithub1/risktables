@@ -185,7 +185,8 @@ class VarModel():
         history_dict = {}
         for symbol in set(symbols):
             try:
-                history_dict[symbol] = self.history_fetcher.fetch_history(symbol, self.dt_beg, self.dt_end)
+                df_this_symbol = self.history_fetcher.fetch_history(symbol, self.dt_beg, self.dt_end)
+                history_dict[symbol] = df_this_symbol.sort_values('date')
                 df_to_log = history_dict[symbol]
                 print(df_to_log.tail())
             except Exception as e:
