@@ -183,18 +183,15 @@ class VarModel():
     def fetch_portfolio_history(self):
         symbols = list(set(self.df_portfolio.underlying.as_matrix().reshape(-1)))
         history_dict = {}
-        self.logger.info(f'fetch_portfolio_history: dt_beg:{self.dt_beg} dt_end:{self.dt_end}')
         for symbol in set(symbols):
             try:
                 history_dict[symbol] = self.history_fetcher.fetch_history(symbol, self.dt_beg, self.dt_end)
+                df_to_log = history_dict[symbol]
+                print(df_to_log.tail())
             except Exception as e:
                 self.logger.warn(str(e))
                 # dynamically adjust bad symbol out of the portfolio
                 self.df_portfolio = self.df_portfolio[self.df_portfolio.underlying!=symbol]
-        if len(history_dict.keys())>0:
-            df_to_log = history_dict[symbols[0]]
-            print(f'fetch_portfolio_history: dt_beg:{self.dt_beg} dt_end:{self.dt_end}')
-            print(df_to_log.tail())
         return history_dict
 
     def get_reference_index_current_price(self):
