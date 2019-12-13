@@ -269,15 +269,15 @@ class HistoryBuilder():
         :param dt_end:
         '''
         pga2 = self.pga
-        end_date = dt_end if dt_end is not None else dt.datetime.now()
-        end_date_str = end_date.strftime("%Y-%m-%d")
-        beg_date = dt_beg if dt_beg is not None else end_date - dt.timedelta(self.days_to_fetch)
-        beg_date_str = beg_date.strftime("%Y-%m-%d")
-        sql_delete = f"""
-        delete from {self.full_table_name} where date>='{beg_date_str}' and date<='{end_date_str}';
-        """
-        pga2.exec_sql_raw(sql_delete)
-                
+#         end_date = dt_end if dt_end is not None else dt.datetime.now()
+#         end_date_str = end_date.strftime("%Y-%m-%d")
+#         beg_date = dt_beg if dt_beg is not None else end_date - dt.timedelta(self.days_to_fetch)
+#         beg_date_str = beg_date.strftime("%Y-%m-%d")
+#         sql_delete = f"""
+#         delete from {self.full_table_name} where date>='{beg_date_str}' and date<='{end_date_str}';
+#         """
+#         pga2.exec_sql_raw(sql_delete)
+#                 
         sql_get = f"""
         select symbol,max(date) max_date, min(date) min_date from {self.full_table_name}
         group by symbol
@@ -371,8 +371,8 @@ class HistoryBuilder():
         if self.build_table:
             self.build_pg_from_csvs()
         if self.update_table:
-#             self.update_yahoo_daily(self.beg_date, self.end_date)
-            self.update_daily_with_delete(self.beg_date, self.end_date)
+            self.update_yahoo_daily(self.beg_date, self.end_date)
+#             self.update_daily_with_delete(self.beg_date, self.end_date)
 
 
 if __name__ == '__main__':
@@ -397,7 +397,7 @@ if __name__ == '__main__':
                     help='build_table schema (default=False)',
                     default=False)
     parser.add_argument('--update_table',type=bool,
-                    help='update_table schema (default=False)',
+                    help='update_table data (default=False)',
                     default=False)
     parser.add_argument('--beg_date_yyyymmddhhmmss',type=str,
                     help='yyyymmdd or yyyymmddhhmmss string that is converted to beginning datetime.dateime object for yahoo fetches (default datetime.datetime.now - datetime.timedelta(days_to_fetch)',
