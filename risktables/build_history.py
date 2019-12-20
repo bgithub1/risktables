@@ -289,20 +289,22 @@ class HistoryBuilder():
             r  = df_last_dates.iloc[i]
             
             end_date = dt_end if dt_end is not None else dt.datetime.now()
-            end_date = get_last_business_day(end_date)                
-            beg_date = dt_beg if dt_beg is not None else end_date - dt.timedelta(self.days_to_fetch)
+            end_date = get_last_business_day(end_date)
+            end_date_morn = dt.datetime(int(end_date.year),int(end_date.month),int(end_date.day),1,0)                
+            beg_date = dt_beg if dt_beg is not None else end_date_morn - dt.timedelta(self.days_to_fetch)
             db_min_date = dt.datetime.combine(r.min_date, dt.datetime.min.time())
             db_max_date = dt.datetime.combine(r.max_date, dt.datetime.max.time())
             
             if (db_min_date - beg_date).days <= 4: # account for weekends + or long holiday
                 # move the begin date up because you already have this data
-                beg_date = db_max_date + dt.timedelta(1)   
+                db_max_date_morn = dt.datetime(int(db_max_date.year),int(db_max_date.month),int(db_max_date.day),1,0)
+                beg_date = db_max_date_morn + dt.timedelta(1)   
             if beg_date >= end_date:
                 self.logger.info(f'{r.symbol} number {i} of {total_to_update}  nothing to update')
                 continue   
             if end_date <= db_max_date:
                 self.logger.info(f'{r.symbol} number {i} of {total_to_update}  nothing to update')
-                continue   
+                continue                   
             try:
                 self.add_symbol_to_pg(r.symbol, beg_date, end_date)
                 self.logger.info(f'{r.symbol} number {i} of {total_to_update}  updated')
@@ -432,7 +434,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     days_to_fetch = args.days_to_fetch
-    end_date = dt.datetime.now() 
+    nw = dt.datetime.now()
+    end_date = dt.datetime(int(nw.year),int(nw.month),int(nw.day),23,59) 
     if args.end_date_yyyymmddhhmmss is not None:
         yyyy = args.end_date_yyyymmddhhmmss[0:4]
         month = args.end_date_yyyymmddhhmmss[4:6]
@@ -442,7 +445,8 @@ if __name__ == '__main__':
         minute = args.end_date_yyyymmddhhmmss[10:12] if len(args.end_date_yyyymmddhhmmss)>10 else 1
         second =  args.end_date_yyyymmddhhmmss[12:14] if len(args.end_date_yyyymmddhhmmss)>12 else 1
         end_date = dt.datetime(yyyy,month,day,hour,minute,second)
-    beg_date = end_date  - dt.timedelta(days_to_fetch) 
+    end_date_morn = dt.datetime(int(end_date.year),int(end_date.month),int(end_date.day),1,0)
+    beg_date = end_date_morn  - dt.timedelta(days_to_fetch) 
     
     if args.beg_date_yyyymmddhhmmss is not None:
         yyyy = args.beg_date_yyyymmddhhmmss[0:4]
