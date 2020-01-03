@@ -936,7 +936,7 @@ class XyGraphComponent(ComponentWrapper):
 #**************************************************************************************************
 class ChainedDropDownDiv(ComponentWrapper):
     def __init__(self,component_id,
-                 dropdown_input_component=None,
+                 dropdown_input_components=None,
                  initial_dropdown_labels=None,
                  initial_dropdown_values=None,
                  placeholder = None,
@@ -946,21 +946,30 @@ class ChainedDropDownDiv(ComponentWrapper):
         
         self.logger = init_root_logger(DEFAULT_LOG_PATH, DEFAULT_LOG_LEVEL) if logger is None else logger
 
-        # add component_id and html_id to self
+        # add component_id to self
         self.component_id = component_id
+        self.dropdown_id = f'{component_id}_dropdown'
         self.style = button_style if style is None else style
-        input_tuples = [(f'{component_id}_dropdown','value')]
-        if dropdown_input_component is not None:
-            input_tuples += [dropdown_input_component.output_data_tuple]
-                
+        
+        # define callback inputs
+        # let the dropdown choice that one makes be the first input to the list of callback inputs
+        input_tuples = [(self.dropdown_id,'value')]
+        # if there is another callback input, add it to the list of callback inputs
+        if dropdown_input_components is not None:
+            for dic in dropdown_input_components:
+                input_tuples += [dic.output_data_tuple]
+
+        # if there are predefined labels and values for the dropdown, assign them                
         self.dropdown_choices = [] if initial_dropdown_labels is None else [{'label':l,'value':v} for l,v in zip(initial_dropdown_labels,initial_dropdown_values)]
         if len(self.dropdown_choices)>0:
-            self.dropdown = dcc.Dropdown(id=input_tuples[0][0], value=initial_dropdown_values[default_initial_index],
+            # create dropdown dash component with initial choices
+            self.dropdown = dcc.Dropdown(id=self.dropdown_id, value=initial_dropdown_values[default_initial_index],
                     options=self.dropdown_choices,
                     placeholder="Select an Option" if placeholder is None else placeholder,
                     style=self.style)
         else:
-            self.dropdown = dcc.Dropdown(id=input_tuples[0][0],
+            # create dropdown dash component WITHOUT initial choices (they will be added during the callback)
+            self.dropdown = dcc.Dropdown(id=self.dropdown_id,
                     placeholder="Select an Option" if placeholder is None else placeholder,
                     style=self.style)
             
@@ -969,6 +978,8 @@ class ChainedDropDownDiv(ComponentWrapper):
         self.dcc_id = f'{component_id}_dropdown_output'
         self.dcc_store = dcc.Store(id=self.dcc_id)
         output_tuples = [(self.dcc_id,'data'),(self.dropdown.id,'options')]
+        
+        # assign or create the method that dynamically creates dropdown choices
         self.choices_transformer_method = choices_transformer_method
         if choices_transformer_method is None:
             self.choices_transformer_method = lambda _: self.dropdown_choices
@@ -976,11 +987,11 @@ class ChainedDropDownDiv(ComponentWrapper):
         
         self.fd_div = html.Div([self.dropdown_div,self.dcc_store])
         self.current_value = None
-        def _create_transformer_lambda(choices_transformer_method,component_id):            
+        def _create_transformer_lambda(choices_transformer_method,component_id,logger):            
             def _dropdown_transformer(v):
-                print(f'_dropdown_transformer {component_id} input: {v}') 
-                selected_item =  v[-1]               
-                new_choices =  choices_transformer_method(selected_item)
+                logger.debug(f'_dropdown_transformer {component_id} input: {v}') 
+                new_choices =  choices_transformer_method(v)
+                selected_item =  v[0]               
                 return [selected_item,new_choices]
             return _dropdown_transformer
 
@@ -988,7 +999,10 @@ class ChainedDropDownDiv(ComponentWrapper):
                      input__tuples=input_tuples,
                      output_tuples=output_tuples,
                      callback_input_transformer=lambda v:[None],logger=logger)
-        dd_lam = _create_transformer_lambda(self.choices_transformer_method,self.component_id)
+        
+        # use the _create_transformer_lambda to inject values into the method that the callback will use
+        dd_lam = _create_transformer_lambda(self.choices_transformer_method,self.component_id,self.logger)
+        # set the callback method (after the parent ComponentWrapper has been instantiated
         self.callback_input_transformer = dd_lam
 
     @ComponentWrapper.html.getter
@@ -1057,6 +1071,12 @@ class StoreComponent(ComponentWrapper):
                  initial_data = None,
                  logger=None):
         
+        if type(input_component)==type([]):
+            # in this case, input_component is a list of tuples
+            input_tuples = input_component
+        else:
+            input_tuples = [(input_component.id,input_component_property)]
+        
         dcc_store = dcc.Store(id=component_id,data=[] if initial_data is None else [initial_data])
         
         def _create_callback_lambda(component_id,_input_transformer,logger,**kwargs):
@@ -1079,7 +1099,8 @@ class StoreComponent(ComponentWrapper):
         
         # do super
         super(StoreComponent,self).__init__(dcc_store,
-                     input__tuples=[(input_component.id,input_component_property)],
+#                      input__tuples=[(input_component.id,input_component_property)],
+                     input__tuples=input_tuples,
                      output_tuples=[(component_id,'data')],
                      callback_input_transformer = lambda v: [None],
                      style={'display':'none'},
