@@ -933,6 +933,70 @@ class XyGraphComponent(ComponentWrapper):
         gr_lam = _create_gr_lambda(self.component_id,x_column,t,self.logger,transform_input=transform_input)
         self.callback_input_transformer = gr_lam
         
+#**************************************************************************************************
+class ChainedDropDownDiv(ComponentWrapper):
+    def __init__(self,component_id,
+                 dropdown_input_component=None,
+                 initial_dropdown_labels=None,
+                 initial_dropdown_values=None,
+                 placeholder = None,
+                 choices_transformer_method=None,
+                 default_initial_index=0,
+                 style=None,logger=None):
+        
+        self.logger = init_root_logger(DEFAULT_LOG_PATH, DEFAULT_LOG_LEVEL) if logger is None else logger
+
+        # add component_id and html_id to self
+        self.component_id = component_id
+        self.style = button_style if style is None else style
+        input_tuples = [(f'{component_id}_dropdown','value')]
+        if dropdown_input_component is not None:
+            input_tuples += [dropdown_input_component.output_data_tuple]
+                
+        self.dropdown_choices = [] if initial_dropdown_labels is None else [{'label':l,'value':v} for l,v in zip(initial_dropdown_labels,initial_dropdown_values)]
+        if len(self.dropdown_choices)>0:
+            self.dropdown = dcc.Dropdown(id=input_tuples[0][0], value=initial_dropdown_values[default_initial_index],
+                    options=self.dropdown_choices,
+                    placeholder="Select an Option" if placeholder is None else placeholder,
+                    style=self.style)
+        else:
+            self.dropdown = dcc.Dropdown(id=input_tuples[0][0],
+                    placeholder="Select an Option" if placeholder is None else placeholder,
+                    style=self.style)
+            
+        self.dropdown_div = html.Div([self.dropdown])
+        self.input_transformer_method = lambda v: v[-1]
+        self.dcc_id = f'{component_id}_dropdown_output'
+        self.dcc_store = dcc.Store(id=self.dcc_id)
+        output_tuples = [(self.dcc_id,'data'),(self.dropdown.id,'options')]
+        self.choices_transformer_method = choices_transformer_method
+        if choices_transformer_method is None:
+            self.choices_transformer_method = lambda _: self.dropdown_choices
+
+        
+        self.fd_div = html.Div([self.dropdown_div,self.dcc_store])
+        self.current_value = None
+        def _create_transformer_lambda(choices_transformer_method,component_id):            
+            def _dropdown_transformer(v):
+                print(f'_dropdown_transformer {component_id} input: {v}') 
+                selected_item =  v[-1]               
+                new_choices =  choices_transformer_method(selected_item)
+                return [selected_item,new_choices]
+            return _dropdown_transformer
+
+        super(ChainedDropDownDiv,self).__init__(self.dropdown,
+                     input__tuples=input_tuples,
+                     output_tuples=output_tuples,
+                     callback_input_transformer=lambda v:[None],logger=logger)
+        dd_lam = _create_transformer_lambda(self.choices_transformer_method,self.component_id)
+        self.callback_input_transformer = dd_lam
+
+    @ComponentWrapper.html.getter
+    def html(self):
+        return self.fd_div
+
+#**************************************************************************************************
+
 
 
 class FigureComponent(ComponentWrapper):
