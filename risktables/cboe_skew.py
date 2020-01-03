@@ -365,8 +365,9 @@ if __name__=='__main__':
     parser.add_argument('--database_config_name',type=str,
                         help=f'IF not specified, do not use postgres.  If used, one of {postgres_config_names}',
                         default='secdb_local')
-    parser.add_argument('--additional_route',type=str,nargs='?',
-                        help='the additional URI, if needed (like /oilgas or /risk if the full URL has to include it')
+    parser.add_argument('--additional_route',type=str,
+                        help='the additional URI, if needed (like /oilgas or /risk if the full URL has to include it',
+                        default='/skew/')
     args = parser.parse_args()
     config_name = args.database_config_name
     
@@ -491,8 +492,8 @@ if __name__=='__main__':
                     transform_input=lambda dict_df: transform_input_to_df(dict_df,'df'),
                     columns_to_round=[],digits_to_round=3)
     
-
-    app_to_use = dash.Dash(url_base_pathname='/skew/')
+    additional_route = args.additional_route
+    app_to_use = dash.Dash(url_base_pathname=additional_route)
     # app.layout = html.Div(children=[chained_dd.html])
     
     app_component_list = [top_div,dropdown_instructions,chained_dd_prods,
