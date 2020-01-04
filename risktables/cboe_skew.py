@@ -338,7 +338,10 @@ def create_skew_df(symbol,beg_yyyymmdd, end_yyyymmdd,deltak=5):
     df_pga_skew = pd.DataFrame({'date':dates,'final_skew':final_skews})    
     return df_pga_skew
 
-def show_data(sym):
+def show_data(sym,df_all_to_use=None):
+    if df_all_to_use is not None:
+        dfs = df_all_to_use[df_all_to_use.symbol==sym][['date','final_skew']]
+        return dfs
     global DICT_DELTAK
     # get all dates for this sym
     beg_end_yyyymmdds = get_dates_per_symbol(sym)
@@ -368,18 +371,29 @@ if __name__=='__main__':
     parser.add_argument('--additional_route',type=str,
                         help='the additional URI, if needed (like /oilgas or /risk if the full URL has to include it',
                         default='/skew/')
+    
+    parser.add_argument('--df_all_skew_csv_path',type=str,nargs='?',
+                        help='full path of csv file that contains pre-computed skews, in case you do not want to use a database of options prices')
+
     args = parser.parse_args()
     config_name = args.database_config_name
     
-    df_this_config = df_pg_info[df_pg_info.config_name==config_name].fillna('')
-    if len(df_this_config)<1:
-        raise ValueError(f'postgres configuration name {config_name} is not in ')
-    s = df_this_config.to_dict('records')[0]
-
-    pga = pg.PgPandas(
-                dburl=s['dburl'], databasename=s['databasename'], 
-                username=s['username'], password=s['password'])
-    ALL_SYMBOLS, ALL_PRODUCTS = get_all_symbols(pga)
+    
+    df_all_skew = None
+    if args.df_all_skew_csv_path is not None:
+        df_all_skew = pd.read_csv(args.df_all_skew_csv_path)
+        ALL_SYMBOLS = df_all_skew.symbol.unique()
+        ALL_PRODUCTS = list(set([c[0:(len(c)-3)] for c in ALL_SYMBOLS]))
+    else:
+        df_this_config = df_pg_info[df_pg_info.config_name==config_name].fillna('')
+        if len(df_this_config)<1:
+            raise ValueError(f'postgres configuration name {config_name} is not in ')
+        s = df_this_config.to_dict('records')[0]
+    
+        pga = pg.PgPandas(
+                    dburl=s['dburl'], databasename=s['databasename'], 
+                    username=s['username'], password=s['password'])
+        ALL_SYMBOLS, ALL_PRODUCTS = get_all_symbols(pga)
 
 
 
@@ -404,6 +418,7 @@ if __name__=='__main__':
                     initial_dropdown_labels=['Emini','WTI Crude','Brent Crude'],
                     initial_dropdown_values=['ES','CL','CB'])
     
+        
     def _chained_years(inputs):
         prod = inputs[1]
         if prod is None or len(prod)<1:
@@ -444,21 +459,39 @@ if __name__=='__main__':
         (chained_dd_months.dropdown_id,'value'),    
     ]
     
-    def _create_full_symbol(inputs):
-        print(f'_create_full_symbol inputs {inputs}')
-        if inputs is None or len(inputs)<3 or inputs[0] is None or inputs[1] is None or inputs[2] is None:
-            return {}
-        prod = inputs[0]
-        yy = str(inputs[1])[-2:]
-        month = inputs[2]
-        full_symbol = prod+month+yy
-        full_symbol = full_symbol.upper()
-        print(f'full_symbol {full_symbol}')
-        dict_df = show_data(full_symbol).to_dict()
-        return {'full_symbol':full_symbol,'df':dict_df}
-        
+    def _create_full_symbol_closure(df_all_skew=None):
+        def _create_full_symbol(inputs,df_all_skew=df_all_skew):
+            print(f'_create_full_symbol inputs {inputs}')
+            if inputs is None or len(inputs)<3 or inputs[0] is None or inputs[1] is None or inputs[2] is None:
+                return {}
+            prod = inputs[0]
+            yy = str(inputs[1])[-2:]
+            month = inputs[2]
+            full_symbol = prod+month+yy
+            full_symbol = full_symbol.upper()
+            print(f'full_symbol {full_symbol}')
+            dict_df = show_data(full_symbol,df_all_skew).to_dict()
+            return {'full_symbol':full_symbol,'df':dict_df}
+        return _create_full_symbol
+
     full_symbol_store = dgc.StoreComponent('symbol_store',full_symbol_store_inputs,
-                                create_data_dictionary_from_df_transformer=_create_full_symbol)
+                            create_data_dictionary_from_df_transformer=_create_full_symbol_closure(df_all_skew))
+#     
+#     def _create_full_symbol(inputs):
+#         print(f'_create_full_symbol inputs {inputs}')
+#         if inputs is None or len(inputs)<3 or inputs[0] is None or inputs[1] is None or inputs[2] is None:
+#             return {}
+#         prod = inputs[0]
+#         yy = str(inputs[1])[-2:]
+#         month = inputs[2]
+#         full_symbol = prod+month+yy
+#         full_symbol = full_symbol.upper()
+#         print(f'full_symbol {full_symbol}')
+#         dict_df = show_data(full_symbol).to_dict()
+#         return {'full_symbol':full_symbol,'df':dict_df}
+#         
+#     full_symbol_store = dgc.StoreComponent('symbol_store',full_symbol_store_inputs,
+#                                 create_data_dictionary_from_df_transformer=_create_full_symbol)
     
     def _symbol_from_store(inputs):
         print(f'_symbol_from_store inputs: {inputs}')
