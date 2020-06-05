@@ -162,13 +162,13 @@ def get_CL_expiry(symbol):
     if month<1:
         month = 12
         year = year - 1
-    return datetime.datetime(year,month,26) - 7*bday_us
+    return datetime.datetime(year,month,25) - 4*bday_us
 
 def get_NG_expiry(symbol):
     monthcode_yy = symbol[2:]
     month = DICT_MONTH_CODE[monthcode_yy[0]]
     year = 2000 + int(monthcode_yy[1:])
-    return datetime.datetime(year,month,1) - 4*bday_us
+    return datetime.datetime(year,month,1) - 3*bday_us
 
 DICT_PRODUCT = {
     'E6':get_E6_expiry,
