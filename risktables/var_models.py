@@ -8,7 +8,8 @@ if  not './' in sys.path:
     sys.path.append('./')
 if  not '../' in sys.path:
     sys.path.append('../')
-import pandas_datareader.data as pdr
+# import pandas_datareader.data as pdr
+import yfinance as yf
 import pandas as pd
 import datetime
 import pytz
@@ -72,7 +73,8 @@ class YahooFetcher():
     def fetch_history(self,symbol,dt_beg,dt_end):
         if symbol in self.history_dict:
             return self.history_dict[symbol]            
-        df = pdr.DataReader(symbol, 'yahoo', dt_beg, dt_end)
+#         df = pdr.DataReader(symbol, 'yahoo', dt_beg, dt_end)
+        df = yf.download(symbol, dt_beg, dt_end)
         # move index to date column, sort and recreate index
         df['date'] = df.index
         df = df.sort_values('date')

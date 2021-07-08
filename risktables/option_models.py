@@ -285,7 +285,7 @@ def get_df_greeks(df_portfolio,df_atm_price,model_per_underlying_dict):
         op_model = model_per_underlying_dict[row.underlying]
         greeks = get_greeks(symbol, atm_price, op_model)
         for g in greek_cols:
-            greeks[g] = greeks[g] * float(size)
+            greeks[g] = greeks[g] * float(size) * float(atm_price)
         greeks['symbol'] = row.symbol
         greeks['underlying'] = row.underlying
         greeks['position'] = row.position

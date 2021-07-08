@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from pandas.tseries.offsets import BDay
 import pandas_datareader.data as pdr
+
 import datetime
 import pytz
 import pathlib

@@ -48,14 +48,19 @@ def update_greek_totals(df_risk_all,df_atm_price):
     print('entering update_delta_div')
     ret = {'delta':0,'gamma':0,'vega':0,'theta':0}
     df_risk = df_risk_all.merge(df_atm_price[['underlying','price']],how='inner',on='underlying')    
-    df_risk['ddelta'] = df_risk.apply(lambda r:r.delta * r.price,axis=1)
-    ret['delta'] =  df_risk.ddelta.sum()
-    df_risk['dgamma'] = df_risk.apply(lambda r:r.gamma * r.price,axis=1)
-    ret['gamma'] = df_risk.dgamma.sum()
-    df_risk['dvega'] = df_risk.apply(lambda r:r.vega * r.price,axis=1)
-    ret['vega'] = df_risk.dvega.sum()
-    df_risk['dtheta'] = df_risk.apply(lambda r:r.theta * r.price,axis=1)
-    ret['theta'] = df_risk.dtheta.sum()
+#     df_risk['ddelta'] = df_risk.apply(lambda r:r.delta * r.price,axis=1)
+#     ret['delta'] =  df_risk.ddelta.sum()
+#     df_risk['dgamma'] = df_risk.apply(lambda r:r.gamma * r.price,axis=1)
+#     ret['gamma'] = df_risk.dgamma.sum()
+#     df_risk['dvega'] = df_risk.apply(lambda r:r.vega * r.price,axis=1)
+#     ret['vega'] = df_risk.dvega.sum()
+#     df_risk['dtheta'] = df_risk.apply(lambda r:r.theta * r.price,axis=1)
+#     ret['theta'] = df_risk.dtheta.sum()
+    ret['delta'] =  df_risk.delta.sum()
+    ret['gamma'] = df_risk.gamma.sum()
+    ret['vega'] = df_risk.vega.sum()
+    ret['theta'] = df_risk.theta.sum()
+
     return  ret
     
 def log_or_print(mess,logger=None):
