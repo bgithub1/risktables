@@ -29,7 +29,8 @@ if  not '../' in sys.path:
 from risktables import pg_pandas as pg
 from os import listdir
 from os.path import isfile, join
-import pandas_datareader.data as web
+# import pandas_datareader.data as web
+import yfinance as yf
 import pandas as pd
 import datetime as dt
 import time
@@ -130,11 +131,13 @@ class HistoryBuilder():
     
     def get_yahoo_data(self,sym,beg_date,end_date):
         try:
-            df =web.DataReader(sym, 'yahoo', beg_date, end_date)
+#             df =web.DataReader(sym, 'yahoo', beg_date, end_date)
+            df = yf.download(sym, beg_date, end_date)
             return df
         except:
             try:
-                df =web.DataReader(sym, 'yahoo', beg_date, end_date)
+#                 df =web.DataReader(sym, 'yahoo', beg_date, end_date)
+                df = yf.download(sym, beg_date, end_date)
                 return df
             except:
                 try:
