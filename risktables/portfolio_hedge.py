@@ -72,7 +72,8 @@ def create_portfolio_history(symbol_list,weights,dt_beg=None,dt_end=None):
     :param dt_end: default is today
     '''
     df_hist = fetch_histories(symbol_list,dt_beg,dt_end)
-    hist_matrix = df_hist[symbol_list].as_matrix()
+#     hist_matrix = df_hist[symbol_list].as_matrix()
+    hist_matrix = df_hist[symbol_list].values
     # now create random weights
     prices = hist_matrix @ weights
     df = pd.DataFrame({'port':prices})
@@ -136,11 +137,13 @@ class PortfolioHedge():
     def get_train_test_values(self):
         df = self.df.copy()
         ntd = self.num_of_test_days
-        yreal = df[self.portfolio_value_col].as_matrix().reshape(-1)
+#         yreal = df[self.portfolio_value_col].as_matrix().reshape(-1)
+        yreal = df[self.portfolio_value_col].values.reshape(-1)
         df = df.drop(self.portfolio_value_col,axis=1)
         if self.date_column is not None:
             df = df.drop(self.date_column)
-        all_Xnp = df.as_matrix().reshape(-1,len(df.columns.values))
+#         all_Xnp = df.as_matrix().reshape(-1,len(df.columns.values))
+        all_Xnp = df.values.reshape(-1,len(df.columns.values))
         hedge_ratios = np.array([self.hedge_ratio_dict[symbol] for symbol in df.columns.values])
         ysim = np.array(all_Xnp @ hedge_ratios + self.bias) * self.last_day_ratio
         # plot with without pandas
@@ -218,7 +221,8 @@ class MinVarianceHedge(PortfolioHedge):
         all_columns = [self.portfolio_value_col] + non_port_columns
         df_train = self.df[all_columns].iloc[:-self.num_of_test_days]
         df_corr = df_train.corr()
-        matrix_corr_inner = df_corr.as_matrix()[1:,1:]
+#         matrix_corr_inner = df_corr.as_matrix()[1:,1:]
+        matrix_corr_inner = df_corr.values[1:,1:]
         matrix_inverse = np.linalg.inv(matrix_corr_inner)
         non_port_vector = np.array(df_corr.iloc[1:,0])
         hedges = matrix_inverse @ non_port_vector
@@ -264,11 +268,13 @@ class PytorchHedge(PortfolioHedge):
     
     
     def run_model(self):
-        Ynp = self.df[self.portfolio_value_col].as_matrix()[:-self.num_of_test_days]
+#         Ynp = self.df[self.portfolio_value_col].as_matrix()[:-self.num_of_test_days]
+        Ynp = self.df[self.portfolio_value_col].values[:-self.num_of_test_days]
         x_cols = list(filter(lambda s: s.lower() != self.portfolio_value_col.lower(),self.df.columns.values))
         if self.date_column is not None:
             x_cols = list(filter(lambda s: s.lower()!= self.date_column.lower(),x_cols))
-        Xnp = self.df[x_cols].as_matrix()[:-self.num_of_test_days]
+#         Xnp = self.df[x_cols].as_matrix()[:-self.num_of_test_days]
+        Xnp = self.df[x_cols].values[:-self.num_of_test_days]
         b=1
         # number of epochs
         epochs=20000

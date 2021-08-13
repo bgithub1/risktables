@@ -137,7 +137,8 @@ def update_risk_data(df,temp_folder,use_postgres=False,
     weights = [series_weights[c] for c in symbol_list] 
 
     df_port_prices = vm.get_history_matrix()
-    hist_matrix = df_port_prices[symbol_list].as_matrix()
+#     hist_matrix = df_port_prices[symbol_list].as_matrix()
+    hist_matrix = df_port_prices[symbol_list].values
     # now create random weights
     port_price_history = hist_matrix @ weights
     df_port = pd.DataFrame({'date':df_port_prices.date,'port':port_price_history})

@@ -18,6 +18,8 @@ from risktables import option_models as opmod
 from risktables import logger_init as li
 from scipy.stats import norm
 from pandas_datareader import data as web
+import traceback 
+
 
 class PostgresFetcher():
     '''
@@ -59,7 +61,6 @@ class PostgresFetcher():
         df = df.rename(columns={c:c.lower() for c in df.columns.values})
         return df
 
-    
 class YahooFetcher():
     def __init__(self):
         self.history_dict = {}
@@ -74,7 +75,12 @@ class YahooFetcher():
         if symbol in self.history_dict:
             return self.history_dict[symbol]            
 #         df = pdr.DataReader(symbol, 'yahoo', dt_beg, dt_end)
-        df = yf.download(symbol, dt_beg, dt_end)
+        try:
+            df = yf.download(symbol, dt_beg, dt_end,threads=False)
+        except Exception as e:
+            print(f'fetch_history error in YahooFetcher: {symbol}, {[dt_beg,dt_end]}: {e}')
+#             traceback.print_exc()
+            return None
         # move index to date column, sort and recreate index
         df['date'] = df.index
         df = df.sort_values('date')
@@ -183,7 +189,8 @@ class VarModel():
         self.df_corr_price = self.compute_corr_matrix(use_returns=False)
         
     def fetch_portfolio_history(self):
-        symbols = list(set(self.df_portfolio.underlying.as_matrix().reshape(-1)))
+#         symbols = list(set(self.df_portfolio.underlying.as_matrix().reshape(-1)))
+        symbols = list(set(self.df_portfolio.underlying.values.reshape(-1)))
         history_dict = {}
         for symbol in set(symbols):
             try:
@@ -269,7 +276,8 @@ class VarModel():
     def get_current_prices(self):
         df_price_history = self.get_history_matrix()
         df_price_history = df_price_history.drop([self.date_column],axis=1)
-        prices = df_price_history.iloc[-1].as_matrix()
+#         prices = df_price_history.iloc[-1].as_matrix()
+        prices = df_price_history.iloc[-1].values
         syms = df_price_history.columns.values
         df_prices = pd.DataFrame({'underlying':syms,self.price_column:prices})
         return df_prices
@@ -315,7 +323,8 @@ class VarModel():
         dfc = df_corr.copy()
         dfc = dfc.sort_index()
         dfc = dfc[sorted(dfc.columns.values)]       
-        port_variance = df_underlying_positions.position_var.astype(float).as_matrix().T @ dfc.astype(float).as_matrix() @ df_underlying_positions.position_var.astype(float).as_matrix()
+#         port_variance = df_underlying_positions.position_var.astype(float).as_matrix().T @ dfc.astype(float).as_matrix() @ df_underlying_positions.position_var.astype(float).as_matrix()
+        port_variance = df_underlying_positions.position_var.astype(float).values.T @ dfc.astype(float).values @ df_underlying_positions.position_var.astype(float).values
         
         dfcp = df_corr_price.copy()
         dfcp = dfcp.sort_index()
