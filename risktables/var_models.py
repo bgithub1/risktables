@@ -152,8 +152,10 @@ class FixedRateModel():
         m = n.month
         d = n.day
         beg = '%04d-%02d-%02d' %(y,m,d)
-        df = web.DataReader('USD3MTD156N', "fred", f'{beg}', '2200-12-31')
-        self.fixed_rate = float(df.iloc[len(df)-1].USD3MTD156N)/100
+#         df = web.DataReader('USD3MTD156N', "fred", f'{beg}', '2200-12-31')
+#         self.fixed_rate = float(df.iloc[len(df)-1].USD3MTD156N)/100
+        df = web.DataReader('DTB1YR', "fred", f'{beg}', '2200-12-31')
+        self.fixed_rate = float(df.iloc[len(df)-1].DTB1YR)/100
         
         
     def get_rate(self,date):

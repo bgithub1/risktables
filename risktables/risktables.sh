@@ -3,6 +3,8 @@
 # bash risktables.sh 8700 ~/Virtualenvs3/dashrisk2 $(cd ../../;pwd) 127.0.0.1
 # specify a specific row in postgres_info.csv
 # bash risktables.sh 8700 ~/Virtualenvs3/dashrisk2 $(cd ../../;pwd) 127.0.0.1 dashrisk_local
+# specify that you don't want to use postgres at all (only Yahoo Finance)
+# bash risktables.sh 8700 ~/Virtualenvs3/dashrisk2 $(cd ../../;pwd) 127.0.0.1 nodb
 flask_port=$1
 if [[ -z ${flask_port} ]]
 then
@@ -37,6 +39,15 @@ fi
 
 source ${virtualenv_path}/bin/activate
 cd ${workspace}/risktables/risktables
-python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name ${config_name} --additional_route /risk/
+
+if [[ ${config_name} == 'nodb' ]]
+then
+    echo NOT using postgres.  Only using Yahoo Finance
+    python3  dash_risk_v01.py --host ${mip} --port ${flask_port}  --additional_route /risk/
+else
+    echo using postgres config ${config_name}   Only using Yahoo Finance
+    python3  dash_risk_v01.py --host ${mip} --port ${flask_port} --database_config_name ${config_name} --additional_route /risk/
+fi
+
 cd ~
 deactivate
