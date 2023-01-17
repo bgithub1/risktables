@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[6]:
+# In[1]:
 
 
 import yfinance as yf
@@ -22,7 +22,7 @@ def get_yahoo_data(sym,beg_date,end_date):
         return None
 
 
-# In[12]:
+# In[3]:
 
 
 def create_spdr_options(edate=datetime.datetime.now()):
@@ -33,29 +33,29 @@ def create_spdr_options(edate=datetime.datetime.now()):
     y = (edate + datetime.timedelta(60)).year
     base_amt = 10000
     closes = []
-    pc = list(np.array([['c','p'] for _ in range(5)]).reshape(-1))
+    pc_list = list(np.array([['c','p'] for _ in range(5)]).reshape(-1))
     for i,n in enumerate(names):
         df = get_yahoo_data(n,bdate,edate)
         last_close = df.iloc[-1].Close
         strike = int(last_close.round(0))
-        qty = int(round(base_amt/strike,0))
+        yyyymmdd = y*100*100+1231
+        pc = pc_list[i]
+        position = int(round(base_amt/strike,0))
+        options_symbol = f"{n}_{yyyymmdd}_{strike}_{pc}"
         closes.append(
             {
-                'symbol':n,
-                'yyyymmdd':y*100*100+1231,
-                'strike':strike,
-                'pc':pc[i],
-                'position':qty
+                'symbol':options_symbol,
+                'position':position
             }
         )
     df_spdr = pd.DataFrame(closes)
-    df_spdr['symbol'] = df_spdr['symbol'] + '_' + df_spdr.yyyymmdd.astype(str) + '_' + df_spdr.pc
-    df_spdr = df_spdr[['symbol','position']].copy()
+#     df_spdr['symbol'] = df_spdr['symbol'] + '_' + df_spdr.yyyymmdd.astype(str) + '_' + df_spdr.pc
+#     df_spdr = df_spdr[['symbol','position']].copy()
     return df_spdr        
 
 
 
-# In[13]:
+# In[4]:
 
 
 if __name__== '__main__':
