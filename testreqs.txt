@@ -17,5 +17,5 @@ ondemand==1.0.0
 pandas_datareader==0.10.0
 dash_auth==1.4.1
 fastapi==0.89.1
-ipython==8.8.0
+ipython==7.16.3
 python_dateutil==2.8.2

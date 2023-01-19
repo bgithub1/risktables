@@ -14,4 +14,4 @@ dash==1.0.1
 ondemand==1.0.0
 pytz==2018.4
 SQLAlchemy==1.3.0
-ipython==7.8.0
+ipython==7.16.3
