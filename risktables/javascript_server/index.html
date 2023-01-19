@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0 user-scalable=n"/>
+  <style>
+  
+    :root {
+      --green: #49BE25;
+      --gold: #D5C450; 
+      /*--grey: #A0A0A0;*/
+      --white: #fffff1;
+      --grey:#C9C9C9;
+      --blue: #0040FF;
+      --lighttan: #F6E3CE;
+      --midtan: #F5D0A9;
+      --lightblue:#A9D0F5;
+      --midblue: #5882FA;
+      --lightmagenta:#F6CEF5;
+      --verylightmagenta:#F8E0F7;
+      --halfheight:30px;
+      --height: 50px;
+      --height_0:50px;
+      --width1: 100%;
+      --width2: 94%;
+      --text_font:50px;
+      --button_font:23px;
+      --input_font:23px;
+      --option_font:20px;
+      --minwidth: 800px;
+    }
+
+    .black {
+      color:#000000;
+    }
+    .green {
+      background-color: var(--green);
+      color: var(--green);
+    }
+    .gold {
+      background-color: var(--gold);
+      color: var(--gold);
+    }
+    .grey {
+      background-color: var(--grey);
+      color: var(--grey);
+    }
+    .white {
+      background-color: var(--white);  
+    }
+    .lighttan {
+      background-color: var(--lighttan);
+    }
+    .midtan {
+      background-color: var(--midtan);
+    }
+
+    .option{
+      text-align: center;  
+      font-size: var(--option_font);
+    }
+
+    .curved {
+      background-color: var(--lighttan);
+      border-radius: 70px;  
+    }
+
+/*    div {
+      text-align: center;
+      height:50px;
+      font-size: var(--button_font);
+    }
+*/
+    button, input, select{
+      text-align: center;
+      border: 1px solid rgba(0, 0, 0, 0.8);
+      height:50px;
+      font-size: var(--button_font);
+    }   
+
+
+
+    #title {
+        color:blue;
+    }
+
+    table.dataTable td {
+      font-size: 0.7em;
+    }
+    table.dataTable tr.dtrg-level-0 td {
+      font-size: 0.7em;
+    }
+
+    .bord {
+      text-align: center;
+      border: 1px solid rgba(0, 0, 0, 0.8);
+    }
+
+    .fstitle {
+      font-size: var(--button_font);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div style="width:98vw" class="container-fluid">
+    <div class="row">
+        <button class="col-xs-12 fstitle" id="title">Risk Tables</button>
+    </div>
+    <div class="row">
+      <div class="bord col-sm-6"><table style="width:95%" id="position"></table></div> 
+      <div class="bord col-sm-6"><table style="width:95%" id="greeks"></table></div>   
+    </div>  
+    <div class="row">
+      <div class="bord col-sm-6"><table style="width:95%" id="position2"></table></div> 
+      <div class="bord col-sm-6"><table style="width:95%" id="greeks2"></table></div>   
+    </div>  
+  </div>
+
+
+  <!-- Latest compiled and minified CSS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.js"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+
+  <script> 
+    
+    const get_var_url = "/riskdata"
+
+    const cols_conversions = {
+      'symbol':'sym', 
+      'position':'qty',
+      'underlying':'usym',
+      'close':'last',
+      'stdev':'std',
+      'delta':'del',
+      'gamma':'gam',
+      'unit_var':'uvar',
+      'position_var':'pvar'
+      };
+
+    function build_url(getfull=0){
+      return get_var_url;
+    }
+
+    async function fetch_var(getfull=0) {
+      var full_url = build_url(getfull=getfull);
+      const response = await fetch(full_url, 
+      {
+          method: 'GET',
+          headers: {
+              'Accept': 'application/json',
+          },
+      })
+      
+      if (response.ok) { // if HTTP-status is 200-299
+        // get the response body (the method explained below)
+        let json = await response.json();
+        return json;
+      } else {
+          alert("HTTP-Error: " + response.status);
+          return null;
+      }  
+    };
+
+    function convert_df_portfolio_col_names(row){
+      var row_keys = Object.keys(row);
+      ret = Object.assign({}, ...row_keys.map((x) => ({[cols_conversions[x]]:row[x]})));
+      return ret;
+    }
+
+    function convert_df_portfolio(df_portfolio){
+      // change the keys in each row of df_portolio to a shorter length
+      var df_portfolio_new = df_portfolio.map(row=>convert_df_portfolio_col_names(row));
+      // make all floats only 3 decimal places
+
+      for (var i=0;i<df_portfolio_new.length;i++){
+        var row = df_portfolio_new[i];
+        Object.keys(row).forEach(function(k){
+          var row_value = row[k];
+          if (typeof(row_value)=='number'){
+            new_row_value = Math.round(row_value*1000)/1000;
+            df_portfolio_new[i][k] = new_row_value;
+          }
+        });
+      }
+      return df_portfolio_new;
+    }
+
+    function display_position(json_results,tag_id,cols_to_display) {
+      // get position data from server results
+      var df_portfolio = json_results['df_positions_all'];
+      // convert the keys of that df_portfolio rows to keys that have smaller lengths, like 'symbol' will be 'sym'.
+      df_portfolio = convert_df_portfolio(df_portfolio);
+      // display datatable
+      if ( ! $.fn.DataTable.isDataTable("#"+tag_id) ) {
+        // these are the shorter lenght keys that we will display in the datatables
+        const converted_cols = cols_to_display.map(c=>cols_conversions[c])
+        // this is the dictionary that you pass to datatable
+        var dt_cols = converted_cols.map(function(c){
+          return {"data":c,"title":c}
+        });
+        // display the datatable
+        $("#"+tag_id).dataTable( {
+            "data": df_portfolio,
+            "columns":dt_cols,
+            "order": [[0, 'asc']],
+            "pageLength": 100,
+            "searching": false,
+            "lengthChange": false,
+            "info":false,
+        } );      
+      } else {
+        var dt = $("#"+tag_id).dataTable();
+        dt.fnClearTable();
+        dt.fnAddData(df_portfolio,redraw=true);
+      }        
+    };
+
+      // const pos_cols_to_display =  [
+      //   'symbol','position','close','stdev',
+      //   'delta','gamma','unit_var','position_var'
+      // ];
+
+    function display_risk_tables(){
+      // get var stuff from risk_server.py
+      const pos_cols_to_display =  ['symbol','position','close','stdev'];
+      const greeks_cols_to_display = ['underlying','delta','gamma','unit_var','position_var']
+      // fetch and display data
+      fetch_var(getfull=0)
+      .then(function(json_results){
+        // console.log(json_results);
+        display_position(json_results,'position',pos_cols_to_display);
+        display_position(json_results,'greeks',greeks_cols_to_display);
+        display_position(json_results,'position2',pos_cols_to_display);
+        display_position(json_results,'greeks2',greeks_cols_to_display);
+      });  
+    }
+
+        // these are the keys that come from the server
+
+    function initit(){
+      display_risk_tables();
+    }
+
+    window.onload = initit();
+
+  </script>    
+</body>
