@@ -2,6 +2,7 @@ passlib
 dash_html_components
 plotly
 dash
+dash-bootstrap-components
 numpy
 pandas_datareader
 pytz
@@ -19,3 +20,7 @@ fastapi
 ipython
 python_dateutil
 uvicorn
+notebook
+torch
+torchvision
+torchaudio

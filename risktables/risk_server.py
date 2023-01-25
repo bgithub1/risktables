@@ -9,6 +9,7 @@ import pandas as pd
 import datetime
 import pytz
 import var_models
+import risk_tables
 from IPython import display
 
 
@@ -49,6 +50,20 @@ async def get_var():
 		r = var_results[k]
 		if type(r) == pd.DataFrame:
 			r = r.to_dict(orient="records")
+		return_dict[k] = r
+	return return_dict
+
+
+@app.get("/get_risk")
+async def get_risk_tables():
+	df_port = pd.read_csv('spdr_stocks.csv')
+	rt = risk_tables.RiskCalcs(use_postgres=False)
+	var_results = rt.calculate(df_port)
+	return_dict = {}
+	for k in var_results.keys():
+		r = var_results[k]
+		if k[:2] == 'df':
+			 r = pd.DataFrame(r).to_dict(orient="records")
 		return_dict[k] = r
 	return return_dict
 

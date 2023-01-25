@@ -22,7 +22,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/riskdata', (req, res) => {
-  const get_var_url = "http://localhost:8555/get_var";
+  // const get_var_url = "http://localhost:8555/get_var";
+  const get_var_url = "http://localhost:8555/get_risk";
   fetch(get_var_url)
     .then(response => response.json())
     .then(data => {

@@ -105,19 +105,42 @@
 
   <div style="width:98vw" class="container-fluid">
     <div class="row">
-        <button class="col-xs-12 fstitle" id="title">Risk Tables</button>
+        <button class="col-xs-12 fstitle" id="title">LiveRisk Portfolio Risk</button>
     </div>
     <div class="row">
-      <div class="bord col-sm-6"><table style="width:95%" id="position"></table></div> 
-      <div class="bord col-sm-6"><table style="width:95%" id="greeks"></table></div>   
+      <div class="bord col-sm-6">
+        <table style="width:95%" id="position" >
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Current Position</caption>
+        </table>
+      </div> 
+      <div class="col-sm-6">
+        <div id="tester" style="width: :95%"</div>
+      </div>         
     </div>  
+<!--     <div class="row">
+      <div class="bord col-sm-6">
+        <table style="width:95%" id="position2">
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying VaR</caption>
+        </table></div> 
+      <div class="bord col-sm-6">
+        <table style="width:95%" id="greeks2">
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying Greeks</caption>
+        </table></div>   
+    </div>  -->
     <div class="row">
-      <div class="bord col-sm-6"><table style="width:95%" id="position2"></table></div> 
-      <div class="bord col-sm-6"><table style="width:95%" id="greeks2"></table></div>   
-    </div>  
+      <div class="col-sm-1"></div>
+      <div class="bord col-sm-10">
+        <table style="width:95%" id="greeks2">
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying Greeks</caption>
+        </table>
+      <div class="col-sm-1"></div>
+      </div>   
+    </div> 
   </div>
 
 
+  <!-- plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.17.1.min.js"></script>
   <!-- Latest compiled and minified CSS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 
@@ -145,8 +168,11 @@
       'stdev':'std',
       'delta':'del',
       'gamma':'gam',
+      'vega':'veg',
+      'rho':'rho',
+      'theta':'theta',
       'unit_var':'uvar',
-      'position_var':'pvar'
+      'position_var':'pvar',
       };
 
     function build_url(getfull=0){
@@ -197,9 +223,10 @@
       return df_portfolio_new;
     }
 
-    function display_position(json_results,tag_id,cols_to_display) {
+    function display_position(json_results,tag_id,cols_to_display,json_results_key='df_risk_all') {
       // get position data from server results
-      var df_portfolio = json_results['df_positions_all'];
+      // var df_portfolio = json_results['df_positions_all'];
+      var df_portfolio = json_results[json_results_key];
       // convert the keys of that df_portfolio rows to keys that have smaller lengths, like 'symbol' will be 'sym'.
       df_portfolio = convert_df_portfolio(df_portfolio);
       // display datatable
@@ -219,6 +246,7 @@
             "searching": false,
             "lengthChange": false,
             "info":false,
+            "scrollX": true,
         } );      
       } else {
         var dt = $("#"+tag_id).dataTable();
@@ -227,23 +255,81 @@
       }        
     };
 
-      // const pos_cols_to_display =  [
-      //   'symbol','position','close','stdev',
-      //   'delta','gamma','unit_var','position_var'
-      // ];
+
+    function render_var_bar_plot(
+      json_results,
+      json_results_key='df_risk_by_underlying',
+      x_col='underlying',
+      y_col='position_var',
+      output_div='tester',
+      plot_type='bar',
+      graph_title="VaR By Underlying",
+      y_axis_title="VaR in Dollars",
+      marker_color="#7e8ed9",) {
+      var df = json_results[json_results_key];
+      var x_arr = df.map(row=>row[x_col]);
+      var y_arr = df.map(row=>row[y_col]);
+      var trace1 = {
+          x:x_arr,
+          y: y_arr,
+          type: plot_type,
+          marker:{color:marker_color}
+      };
+
+      var data = [trace1];
+      var lay_out_yaxis = {
+        title: {
+          text: y_axis_title,
+          // font: {
+          //   family: 'Courier New, monospace',
+          //   size: 18,
+          //   color: '#7f7f7f'
+          // }
+        }
+      };
+
+      var layout = {
+          title: graph_title,
+          yaxis: lay_out_yaxis,
+          // showlegend: false
+      };  
+
+      Plotly.newPlot(output_div,data,layout);  
+      // Plotly.newPlot(
+      //   document.getElementById('tester'), 
+      //   [
+      //     {
+      //       x: x_arr,
+      //       y: y_arr,
+      //       type:'bar', 
+      //     },
+      //     {title:graph_title}
+      //   ], 
+      // );
+    }
+
 
     function display_risk_tables(){
       // get var stuff from risk_server.py
-      const pos_cols_to_display =  ['symbol','position','close','stdev'];
-      const greeks_cols_to_display = ['underlying','delta','gamma','unit_var','position_var']
+      const pos_cols_to_display =  ['symbol','position','position_var'];
+      const greeks_cols_to_display = ['underlying','delta','gamma','vega','theta','rho','position_var']
+      const underlying_cols_to_display =  ['underlying','position_var'];
       // fetch and display data
       fetch_var(getfull=0)
       .then(function(json_results){
         // console.log(json_results);
         display_position(json_results,'position',pos_cols_to_display);
-        display_position(json_results,'greeks',greeks_cols_to_display);
-        display_position(json_results,'position2',pos_cols_to_display);
-        display_position(json_results,'greeks2',greeks_cols_to_display);
+        render_var_bar_plot(json_results);
+        // display_position(json_results,'greeks',greeks_cols_to_display);
+        // display_position(
+        //   json_results,
+        //   'position2',
+        //   underlying_cols_to_display,
+        //   json_results_key='df_risk_by_underlying'
+        // );
+        display_position(
+          json_results,'greeks2',greeks_cols_to_display,json_results_key='df_risk_by_underlying'
+        );
       });  
     }
 
@@ -252,6 +338,7 @@
     function initit(){
       display_risk_tables();
     }
+
 
     window.onload = initit();
 
