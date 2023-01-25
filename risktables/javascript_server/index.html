@@ -73,14 +73,14 @@
     button, input, select{
       text-align: center;
       border: 1px solid rgba(0, 0, 0, 0.8);
-      height:50px;
+/*      height:50px;*/
       font-size: var(--button_font);
     }   
 
 
 
     #title {
-        color:blue;
+        color:white;
     }
 
     table.dataTable td {
@@ -97,8 +97,25 @@
 
     .fstitle {
       font-size: var(--button_font);
+      font-weight: bold;
+      font-family: 'Times New Roman', serif;
+      height:50px;
+      text-align: center;
+      background-color:#47bacc;
+      vertical-align:middle;
     }
 
+    .port_stats {
+/*      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 15px;*/
+      height:60px;
+      font-family: 'Times New Roman', serif;
+      text-align: center;
+      background-color: #f2d472;
+    }
+
+  
   </style>
 </head>
 <body>
@@ -108,13 +125,27 @@
         <button class="col-xs-12 fstitle" id="title">LiveRisk Portfolio Risk</button>
     </div>
     <div class="row">
+      <div class="bord">
+        <button id="port_var" class="port_stats  col-xs-6"></button>
+        <button id="sp_dollar_equiv" class="port_stats  col-xs-6"></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="bord" style="background-color: #f2d472">
+        <button id="port_delta" class="port_stats  col-xs-3"></button>
+        <button id="port_gamma" class="port_stats  col-xs-3"></button>
+        <button id="port_vega" class="port_stats  col-xs-3"></button>
+        <button id="port_theta" class="port_stats  col-xs-3"></button>
+      </div>
+    </div>
+    <div class="row">
       <div class="bord col-sm-6">
         <table style="width:95%" id="position" >
           <caption style="color:#47bacc;text-align:center;font-weight: bold;">Current Position</caption>
         </table>
       </div> 
       <div class="col-sm-6">
-        <div id="tester" style="width: :95%"</div>
+        <div id="var_plot" style="width:95%"></div>
       </div>         
     </div>  
 <!--     <div class="row">
@@ -259,7 +290,7 @@
       json_results_key='df_risk_by_underlying',
       x_col='underlying',
       y_col='position_var',
-      output_div='tester',
+      output_div='var_plot',
       plot_type='bar',
       graph_title="VaR By Underlying",
       y_axis_title="VaR in Dollars",
@@ -293,19 +324,31 @@
       };  
 
       Plotly.newPlot(output_div,data,layout);  
-      // Plotly.newPlot(
-      //   document.getElementById('tester'), 
-      //   [
-      //     {
-      //       x: x_arr,
-      //       y: y_arr,
-      //       type:'bar', 
-      //     },
-      //     {title:graph_title}
-      //   ], 
-      // );
     }
 
+    function render_portfolio_stats(
+      json_results)
+    {
+      var port_var = Math.round(json_results["port_var"]*100)/100;
+      port_var = port_var.toLocaleString("en-US", {style:"currency", currency:"USD"});
+      var sp_dollar_equiv = Math.round(json_results["sp_dollar_equiv"]*100)/100;
+      sp_dollar_equiv = sp_dollar_equiv.toLocaleString("en-US", {style:"currency", currency:"USD"});
+      var delta = Math.round(json_results["delta"]*100)/100;
+      delta = delta.toLocaleString("en-US", {style:"currency", currency:"USD"});
+      var gamma = Math.round(json_results["gamma"]*100)/100;
+      gamma = gamma.toLocaleString("en-US", {style:"currency", currency:"USD"});
+      var vega = Math.round(json_results["vega"]*100)/100;
+      vega = vega.toLocaleString("en-US", {style:"currency", currency:"USD"});
+      var theta = Math.round(json_results["theta"]*100)/100;
+      theta = theta.toLocaleString("en-US", {style:"currency", currency:"USD"});
+
+      document.getElementById('port_var').innerHTML = "Portfolio VaR: " + port_var;
+      document.getElementById('sp_dollar_equiv').innerHTML = "S&P Dollar Equivalent: " + sp_dollar_equiv;
+      document.getElementById('port_delta').innerHTML = "Delta: " + delta; 
+      document.getElementById('port_gamma').innerHTML = "Gamma: " + gamma; 
+      document.getElementById('port_vega').innerHTML = "Vega: " + vega; 
+      document.getElementById('port_theta').innerHTML = "Theta: " + theta; 
+    }
 
     function display_risk_tables(){
       // get var stuff from risk_server.py
@@ -317,14 +360,8 @@
       .then(function(json_results){
         // console.log(json_results);
         display_position(json_results,'position',pos_cols_to_display);
+        render_portfolio_stats(json_results);
         render_var_bar_plot(json_results);
-        // display_position(json_results,'greeks',greeks_cols_to_display);
-        // display_position(
-        //   json_results,
-        //   'position2',
-        //   underlying_cols_to_display,
-        //   json_results_key='df_risk_by_underlying'
-        // );
         display_position(
           json_results,'greeks2',greeks_cols_to_display,json_results_key='df_risk_by_underlying'
         );
