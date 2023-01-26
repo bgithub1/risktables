@@ -166,6 +166,12 @@
       </div>   
     </div> 
   </div>
+  <div class="row">
+    <input class="col-xs-12" type="file" accept=".csv" onchange="get_local_csv_file()" /><br />
+  </div>
+  <div class="row">
+    <div class="col-xs-12" id="filecontent"></div>
+  </div>
 
 
   <!-- plotly.js -->
@@ -186,7 +192,7 @@
 
 
   <script> 
-    
+
     const get_var_url = "/riskdata"
 
     const cols_conversions = {
@@ -368,7 +374,47 @@
       });  
     }
 
-        // these are the keys that come from the server
+    async function get_local_csv_file() {
+      const content = document.querySelector('#filecontent');
+      const [file] = document.querySelector('input[type=file]').files;
+      const reader = new FileReader();
+
+      reader.addEventListener("load", () => {
+        // this will then display a text file
+        content.innerText = reader.result;
+        var csv_text = reader.result.replaceAll('\n',';');
+        upload_csv_to_server(csv_text);
+      }, false);
+
+      if (file) {
+        reader.readAsText(file);
+      }
+    };
+
+    async function upload_csv_to_server(csv_text){
+      // $.post("/riskdata_from_csv",{'data': csv_text}, function(data){
+      //       if(data === 'yes') {
+      //           alert("login success");
+      //         }
+      //   });
+      // await fetch('/riskdata_from_csv?data='+csv_text, {
+      await fetch('/riskdata_from_csv', {
+        method: 'POST',
+        // method: 'GET',
+        headers: {
+            // 'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },        
+        body: JSON.stringify({'data':csv_text})
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          console.log('Success:', result);
+        })
+        .catch((error) => {
+          console.log('Error:'+ error);
+        });    
+    };
 
     function initit(){
       display_risk_tables();
