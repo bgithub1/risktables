@@ -81,10 +81,11 @@ async def get_risk_tables_from_csv(csv_data: CsvData):
 	list_data = [
 		v.split(',')
 		for v in list_data
+		if len(v)>0
 	]
 	dict_data = [
 		{'symbol':v[0],'position':int(v[1])}
-		for v in list_data
+		for v in list_data[1:]
 	]
 	df_port = pd.DataFrame(dict_data)
 	rt = risk_tables.RiskCalcs(use_postgres=False)

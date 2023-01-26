@@ -383,6 +383,7 @@
         // this will then display a text file
         content.innerText = reader.result;
         var csv_text = reader.result.replaceAll('\n',';');
+        csv_text = csv_text.replaceAll('\r',';');
         upload_csv_to_server(csv_text);
       }, false);
 

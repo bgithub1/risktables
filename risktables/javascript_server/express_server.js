@@ -65,7 +65,8 @@ app.post('/riskdata_from_csv', (req, res) => {
 	    .then((response) => response.json())
 	    .then((result) => {
 	      console.log('Success:', result);
-	        res.json('{"status":"got data from fastapi"}');
+	      // res.json('{"status":"got data from fastapi"}');
+	      res.json(result);
 	    })
 	    .catch((error) => {
 	      console.error('Error:', error);
