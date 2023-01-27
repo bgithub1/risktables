@@ -111,11 +111,26 @@
       font-size: 15px;*/
       height:60px;
       font-family: 'Times New Roman', serif;
+      font-weight: bold;
       text-align: center;
       background-color: #f2d472;
     }
+    
+    input[type="file"]::file-selector-button  {
+      height:60px;
+      font-family: 'Times New Roman', serif;
+      text-align: center;
+      background-color: #ffffff;
+      color:#47bacc;
+      border: 0px;
+    }
 
-  
+    input[type="file"]:hover {
+      background-color: #81ecec;
+      border: 2px solid #00cec9;
+    }    
+
+
   </style>
 </head>
 <body>
@@ -148,16 +163,6 @@
         <div id="var_plot" style="width:95%"></div>
       </div>         
     </div>  
-<!--     <div class="row">
-      <div class="bord col-sm-6">
-        <table style="width:95%" id="position2">
-          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying VaR</caption>
-        </table></div> 
-      <div class="bord col-sm-6">
-        <table style="width:95%" id="greeks2">
-          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying Greeks</caption>
-        </table></div>   
-    </div>  -->
     <div class="row">
       <div class="bord col-sm-12">
         <table style="width:95%" id="greeks2">
@@ -165,12 +170,13 @@
         </table>
       </div>   
     </div> 
-  </div>
-  <div class="row">
-    <input class="col-xs-12" type="file" accept=".csv" onchange="get_local_csv_file()" /><br />
-  </div>
-  <div class="row">
-    <div class="col-xs-12" id="filecontent"></div>
+    <div class="row align-items-center">
+      <div class="col-xs-1 port_stats"></div>
+      <input id="file-upload" class="col-xs-10" type="file" accept=".csv" onchange="get_local_csv_file()" />
+      <div class="col-xs-1 port_stats"></div>
+
+    </div>
+  
   </div>
 
 
