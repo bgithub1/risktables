@@ -117,7 +117,7 @@
     }
     
     input[type="file"]::file-selector-button  {
-      height:60px;
+      height:30px;
       font-family: 'Times New Roman', serif;
       text-align: center;
       background-color: #ffffff;
@@ -130,6 +130,35 @@
       border: 2px solid #00cec9;
     }    
 
+    .spinner {
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite; /* Safari */
+      animation: spin 2s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+
+    .show {
+      dipslay:block;
+    }
+
+    .hide {
+      dipslay:none;
+    }
 
   </style>
 </head>
@@ -139,6 +168,14 @@
     <div class="row">
         <button class="col-xs-12 fstitle" id="title">LiveRisk Portfolio Risk</button>
     </div>
+    <div class="row">
+      <div id="spinner" class="spinner col-xs-12"></div>
+    </div>
+    <div class="row align-items-center">
+<!--       <div class="col-xs-1"></div> -->
+      <input id="file-upload" class="col-xs-12" type="file" accept=".csv" onchange="get_local_csv_file()" />
+<!--       <div class="col-xs-1"></div> -->
+    </div>    
     <div class="row">
       <div class="bord">
         <button id="port_var" class="port_stats  col-xs-6"></button>
@@ -170,15 +207,8 @@
         </table>
       </div>   
     </div> 
-    <div class="row align-items-center">
-      <div class="col-xs-1 port_stats"></div>
-      <input id="file-upload" class="col-xs-10" type="file" accept=".csv" onchange="get_local_csv_file()" />
-      <div class="col-xs-1 port_stats"></div>
-
-    </div>
   
   </div>
-
 
   <!-- plotly.js -->
   <script src="https://cdn.plot.ly/plotly-2.17.1.min.js"></script>
@@ -198,6 +228,16 @@
 
 
   <script> 
+    function showDiv(div_id) {
+        document.getElementById(div_id).classList.remove("hide");
+        document.getElementById(div_id).classList.add("show");
+    };
+
+    function hideDiv(div_id) {
+        document.getElementById(div_id).classList.remove("show");
+        document.getElementById(div_id).classList.add("hide");
+    };
+
 
     const get_var_url = "/riskdata"
 
@@ -222,6 +262,7 @@
 
     async function fetch_var(getfull=0) {
       var full_url = build_url(getfull=getfull);
+      showDiv('spinner');
       const response = await fetch(full_url, 
       {
           method: 'GET',
@@ -233,12 +274,15 @@
       if (response.ok) { // if HTTP-status is 200-299
         // get the response body (the method explained below)
         let json = await response.json();
-        return json;
+        ret =  json;
       } else {
           alert("HTTP-Error: " + response.status);
-          return null;
-      }  
+          ret =  null;
+      }
+      hideDiv('spinner');
+      return ret;  
     };
+
 
     function convert_df_portfolio_col_names(row){
       var row_keys = Object.keys(row);
@@ -391,6 +435,7 @@
         var csv_text = reader.result.replaceAll('\n',';');
         csv_text = csv_text.replaceAll('\r',';');
         // send the csv text string to express server, which will send it to python server
+        showDiv('spinner');
         upload_csv_to_server(csv_text)
         .then(function(json_results){
           // console.log(json_results);
@@ -399,6 +444,7 @@
           } else {
             alert('bad csv file uploaded')
           }
+          hideDiv('spinner');
         });  
 
       }, false);
@@ -439,6 +485,7 @@
     };
 
     function initit(){
+      hideDiv('spinner');
       display_risk_tables();
     }
 
