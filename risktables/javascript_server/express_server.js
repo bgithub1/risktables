@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require("body-parser");
+const path = require('path');
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -17,8 +18,8 @@ const cols_conversions = {
   'position_var':'pvar'
   };
 
-app.use(express.static('public'));
-app.use('/risk2', express.static('public'))
+// app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
