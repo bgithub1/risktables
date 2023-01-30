@@ -18,6 +18,7 @@ const cols_conversions = {
   };
 
 app.use(express.static('public'));
+app.use('/risk2', express.static('public'))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
