@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0 user-scalable=n"/>
+  <link rel="stylesheet" type="text/css" href="risk_tables.css">
+
+
+
+</head>
+<body>
+
+  <div style="width:98vw" class="container-fluid">
+    <div class="row">
+        <button class="col-xs-12 fstitle" id="title">LiveRisk Portfolio Risk</button>
+    </div>
+    <div class="row align-items-center">
+      <div class="col-xs-4"></div>
+      <div id="spinner" class="spinner col-xs-4"></div>
+      <div class="col-xs-4"></div>
+    </div>
+    <div class="row align-items-center">
+<!--       <div class="col-xs-1"></div> -->
+      <input id="file-upload" class="col-xs-12" type="file" accept=".csv" onchange="get_local_csv_file()" />
+<!--       <div class="col-xs-1"></div> -->
+    </div>    
+    <div class="row">
+      <div class="bord">
+        <button id="port_var" class="port_stats  col-xs-6"></button>
+        <button id="sp_dollar_equiv" class="port_stats  col-xs-6"></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="bord" style="background-color: #f2d472">
+        <button id="port_delta" class="port_stats  col-xs-3"></button>
+        <button id="port_gamma" class="port_stats  col-xs-3"></button>
+        <button id="port_vega" class="port_stats  col-xs-3"></button>
+        <button id="port_theta" class="port_stats  col-xs-3"></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="bord col-sm-6">
+        <table style="width:95%" id="position" >
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Current Position</caption>
+        </table>
+      </div> 
+      <div class="col-sm-6">
+        <div id="var_plot" style="width:95%"></div>
+      </div>         
+    </div>  
+    <div class="row">
+      <div class="bord col-sm-12">
+        <table style="width:95%" id="greeks2">
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying Greeks</caption>
+        </table>
+      </div>   
+    </div> 
+  
+  </div>
+
+  
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+  <!-- plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.17.1.min.js"></script>
+  <!-- Latest compiled and minified CSS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+  
+  <script src="risk_tables.js"></script>
+
+  <script> 
+    window.onload = initit();
+  </script>    
+</body>
