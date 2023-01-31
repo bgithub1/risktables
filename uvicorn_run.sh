@@ -1,0 +1,1 @@
+uvicorn risk_server:app --port 8555 --reload
