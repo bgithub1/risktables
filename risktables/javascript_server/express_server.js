@@ -6,6 +6,7 @@ const path = require('path');
 // process.argv.forEach((val, index) => {
 //   console.log(`${index}: ${val}`);
 // });
+console.log(process.argv);
 
 var riskdata_path = '/riskdata';
 var riskdata_from_csv = '/riskdata_from_csv';
