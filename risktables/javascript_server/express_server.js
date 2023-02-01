@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 
 app.get(riskdata_path, (req, res) => {
   // const get_var_url = "http://localhost:8555/get_var";
-  const get_var_url = "http://0.0.0.0:8555/get_risk";
+  const get_var_url = "http://127.0.0.1:8555/get_risk";
   fetch(get_var_url)
     .then(response => response.json())
     .then(data => {
@@ -70,7 +70,7 @@ app.post(riskdata_from_csv, (req, res) => {
 	  console.error(Object.keys(req));
 	  r = JSON.stringify({"status":error});
 	}  
-  const get_var_url = "http://0.0.0.0:8555/upload_csv";
+  const get_var_url = "http://127.0.0.1:8555/upload_csv";
   try {
 	  fetch(get_var_url, {
 	    method: 'POST',
