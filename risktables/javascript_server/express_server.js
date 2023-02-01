@@ -2,6 +2,22 @@ const express = require('express');
 const bodyParser = require("body-parser");
 const path = require('path');
 
+// print process.argv
+// process.argv.forEach((val, index) => {
+//   console.log(`${index}: ${val}`);
+// });
+
+var riskdata_path = '/riskdata';
+var riskdata_from_csv = '/riskdata_from_csv';
+
+const pargs = process.argv;
+if (pargs.length > 2) {
+  riskdata_path =  pargs[2] + riskdata_path;
+  riskdata_from_csv =  pargs[2] + riskdata_from_csv;
+}
+
+
+
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
@@ -27,7 +43,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/riskdata', (req, res) => {
+app.get(riskdata_path, (req, res) => {
   // const get_var_url = "http://localhost:8555/get_var";
   const get_var_url = "http://localhost:8555/get_risk";
   fetch(get_var_url)
@@ -43,7 +59,7 @@ app.get('/riskdata', (req, res) => {
 });
 
 
-app.post('/riskdata_from_csv', (req, res) => {
+app.post(riskdata_from_csv, (req, res) => {
   // const get_var_url = "http://localhost:8555/get_var";
   r = '{"status":"okfromexpress"}';
 	try {		
