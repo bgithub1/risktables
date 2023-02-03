@@ -62,8 +62,13 @@ class PostgresFetcher():
         return df
 
 class YahooFetcher():
-    def __init__(self):
+    def __init__(self,redis_port=None,redis_host='localhost'):
         self.history_dict = {}
+        self.redis_port = redis_port
+        redis_db = None
+        if reis_port is not None:
+            redis_db = redis.Redis(host = redis_host,port=redis_port,db=0)
+        self.redis_db = redis_db
 
     def fetch_histories(self,symbol_list,dt_beg,dt_end):
         for symbol in symbol_list:
@@ -75,12 +80,16 @@ class YahooFetcher():
         if symbol in self.history_dict:
             return self.history_dict[symbol]            
 #         df = pdr.DataReader(symbol, 'yahoo', dt_beg, dt_end)
-        try:
-            df = yf.download(symbol, dt_beg, dt_end,threads=False)
-        except Exception as e:
-            print(f'fetch_history error in YahooFetcher: {symbol}, {[dt_beg,dt_end]}: {e}')
-#             traceback.print_exc()
-            return None
+        if redis_port is None:
+            try:
+                df = yf.download(symbol, dt_beg, dt_end,threads=False)
+            except Exception as e:
+                print(f'fetch_history error in YahooFetcher: {symbol}, {[dt_beg,dt_end]}: {e}')
+    #             traceback.print_exc()
+                return None
+        else:
+            try:
+
         # move index to date column, sort and recreate index
         df['date'] = df.index
         df = df.sort_values('date')

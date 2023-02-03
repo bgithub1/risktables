@@ -72,7 +72,7 @@ def log_or_print(mess,logger=None):
 def update_risk_data(df,temp_folder,use_postgres=False,
         dburl=None,databasename=None,username=None,
         password=None,schema_name=None,yahoo_daily_table=None,
-        calculate_hedge_ratio=False,logger=None):
+        calculate_hedge_ratio=False,logger=None,redis_port=None):
     
     error_message = None
     log_or_print(f'Start computing VaR {datetime.datetime.now()}',logger)
@@ -105,7 +105,7 @@ def update_risk_data(df,temp_folder,use_postgres=False,
                                temp_folder=temp_folder)
         history_fetcher = varm.PostgresFetcher(hb)
     else:
-        history_fetcher = varm.YahooFetcher()
+        history_fetcher = varm.YahooFetcher(redis_port=redis_port)
 
     # Almost all of the computational work is done by VarModel
     vm = varm.VarModel(df,history_fetcher)
@@ -219,7 +219,8 @@ class RiskCalcs():
         yahoo_daily_table=None,
         calculate_hedge_ratio=False,
         temp_folder='./temp_folder',
-        logger=None):
+        logger=None,
+        redis_port=None):
         
         self.use_postgres = use_postgres
         self.dburl = dburl
@@ -231,6 +232,7 @@ class RiskCalcs():
         self.temp_folder = temp_folder
         self.calculate_hedge_ratio = calculate_hedge_ratio
         self.logger = dgc.init_root_logger() if logger is None else logger
+        self.redis_port = redis_port
         
     def calculate(self,df):
         return update_risk_data(df,self.temp_folder, use_postgres=self.use_postgres, 
@@ -238,7 +240,9 @@ class RiskCalcs():
                 username=self.username, password=self.password, 
                 schema_name=self.schema_name, 
                 yahoo_daily_table=self.yahoo_daily_table,
-                calculate_hedge_ratio=self.calculate_hedge_ratio,logger=self.logger)
+                calculate_hedge_ratio=self.calculate_hedge_ratio,
+                logger=self.logger,
+                redis_port=self.redis_port)
         
         
         

@@ -70,7 +70,8 @@ class HistoryBuilder():
                  days_to_fetch=DEFAULT_DAYS_TO_FETCH,
                  temp_folder='./temp_folder',
                  logger=None,
-                 STOCKS_DIR = None):
+                 STOCKS_DIR = None,
+                 use_datahub=False):
         self.delete_schema = delete_schema
         self.delete_table = delete_table
         self.fetch_from_yahoo = fetch_from_yahoo
@@ -92,6 +93,7 @@ class HistoryBuilder():
         self.full_table_name = self.schema_name + '.' + self.yahoo_daily_table
         self.initial_symbol_list = self.get_sp_stocks() if initial_symbol_list is None else initial_symbol_list
         self.days_to_fetch = days_to_fetch
+        self.use_datahub = use_datahub
         
     def write_hist_dict_to_csv(self,hist_dict):
         try:
@@ -190,8 +192,10 @@ class HistoryBuilder():
         commodity_etf_short_names = ['USO','UNG','DBC','DBA','GLD','USCI']
         currency_etf_short_names = ['FXY','FXE','FXB','FXF','FXC','FXA']
         print('fetching sp constituents ...')
-#         sp = list(pd.read_csv(url_constituents).Symbol)
-        sp = list(pd.read_csv('./sp_constituents.csv').Symbol)
+        if self.use_datahub:
+            sp = list(pd.read_csv(url_constituents).Symbol)
+        else:
+            sp = list(pd.read_csv('./sp_constituents.csv').Symbol)
         ret = sp + spydr_short_names + commodity_etf_short_names + currency_etf_short_names
         return ret
     

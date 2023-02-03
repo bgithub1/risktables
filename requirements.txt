@@ -15,9 +15,13 @@ ondemand
 scipy
 pandas
 SQLAlchemy
+psycopg2-binary
 dash_auth
+redis
+pyarrow
 fastapi
 ipython
+tqdm
 python_dateutil
 uvicorn
 notebook
