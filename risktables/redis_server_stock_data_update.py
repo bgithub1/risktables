@@ -70,25 +70,34 @@ def fetch_history(symbol,dt_beg,dt_end):
     df = df.groupby('settle_date',as_index=False).first()
     return df
 
+# def get_port_info_values(syms):
+#     names = syms if type(syms)==list else syms.tolist()
+
+#     tickers = yf.Tickers(names)
+#     dict_list = []
+#     for n in names:
+#         try:
+#             d = tickers.tickers[n].get_info()
+#             d['symbol'] = n
+#             dict_list.append(d)
+#         except Exception as e:
+#             print(f'Exception on symbol {n}: {str(e)[0:100]}')
+#     df_info_values = pd.DataFrame(dict_list)
+#     return df_info_values
+    
 def get_port_info_values(syms):
     names = syms if type(syms)==list else syms.tolist()
-    tickers = yf.Tickers(names)
-    dict_list = []
-    for n in names:
-        try:
-            d = tickers.tickers[n].get_info()
-            d['symbol'] = n
-            dict_list.append(d)
-        except Exception as e:
-            print(f'Exception on symbol {n}: {str(e)[0:100]}')
-    df_info_values = pd.DataFrame(dict_list)
+    dfp = fprep.fmp_profile(syms)
+    dfr = fprep.fmp_ratios(syms)
+    df_info_values = dfp.merge(dfr,on='symbol',how='left')
+    df_info_values['pe'] = df_info_values.peRatioTTM
     return df_info_values
-    
-def update_wf_port_info(syms):
+
+def update_wf_port_info(syms,fundamental_key):
     try:
         df_info_values = get_port_info_values(syms)
         if len(df_info_values)>0:
-            info_values_key = 'wf_port_info_csv'
+            info_values_key = fundamental_key
             update_redis_df(info_values_key,df_info_values)
     except Exception as e:
         traceback.print_exc()
@@ -104,7 +113,7 @@ def get_fmp_ratios(symbol):
     response = json.loads(requests.get(ratios_url).text)
     return response
 
-def update_db(beg_sym=None,port_path=None):
+def update_db(beg_sym=None,port_path=None,fundamental_key=None):
     syms = None
     if port_path is not None:
         syms = pd.read_csv(port_path).symbol.values
@@ -129,9 +138,13 @@ def update_db(beg_sym=None,port_path=None):
             except Exception as e:
                 print(f"ERROR on {sym}: {str(e)}")
         
-    update_wf_port_info(syms)
+    if fundamental_key is not None:
+        print(f"Fetching fundamental values for {len(syms)} securites")
+        update_wf_port_info(syms,fundamental_key)
 
-def schedule_updates(t=8,unit='hour',beg_sym=None,port_path=None,num_runs=None):
+
+def schedule_updates(t=8,unit='hour',beg_sym=None,port_path=None,
+    num_runs=None,fundamental_key=None):
     logger = schedule_it.init_root_logger("logfile.log", "INFO")
     counter = num_runs
     while True:
@@ -139,14 +152,13 @@ def schedule_updates(t=8,unit='hour',beg_sym=None,port_path=None,num_runs=None):
         sch = schedule_it.ScheduleNext(unit, t,logger = logger)
         sch.wait()
         logger.info(f"updating history")
-        update_db(beg_sym=beg_sym,port_path=port_path)
+        update_db(beg_sym=beg_sym,port_path=port_path,fundamental_key=fundamental_key)
         if counter is not None:
             counter = counter - 1
             if counter <=0:
                 return
         logger.info(f"sleeping until next {t} {unit} before next scheduling")
         time.sleep(5*60)
-
 
 
 if __name__=='__main__':
@@ -156,11 +168,19 @@ if __name__=='__main__':
         )
     hour = datetime.datetime.now().hour
     parser.add_argument('--port',default=6379,type=int,help="redis port") 
-    parser.add_argument('--portfolio_path',default=None,type=str,help="portfolio path to obtain symbols") 
+    parser.add_argument('--portfolio_path',default=None,type=str,
+        help="portfolio path to obtain symbols.  The symbols should only be 'underlying' symbols") 
     parser.add_argument('--timevalue',default=hour,type=int,
         help="an int value that is either hours or minutes, depending on the arg 'unit'")
     parser.add_argument('--unit',default='hour',type=str,help="either 'hour' or 'minute'")  
     parser.add_argument('--numruns',default=100,type=int,help="number of times to loop")
+    fundamental_help = """
+    If fundamental_key is provided, then, that redis key will be updated with the 
+    fundamental information for the symbols in the portfolio
+    """
+
+    parser.add_argument('--fundamental_key',default=None,type=str,
+        help=fundamental_help)
     args = parser.parse_args()  
     redis_port = args.port
     redis_db = redis.Redis(host = 'localhost',port=redis_port,db=0)
@@ -175,8 +195,11 @@ if __name__=='__main__':
     port_path = args.portfolio_path
     unit = args.unit
     num_runs =args.numruns
+    fundamental_key = args.fundamental_key
     print(args)
-    schedule_updates(t=t,unit=unit,beg_sym=bs,port_path=port_path,num_runs=num_runs)
+    # fundamental_key is often 'wf_port_info_csv'
+    schedule_updates(t=t,unit=unit,beg_sym=bs,port_path=port_path,
+        num_runs=num_runs,fundamental_key=fundamental_key)
 
 
 

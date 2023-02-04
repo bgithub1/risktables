@@ -18,6 +18,9 @@ from risktables import option_models as opmod
 from risktables import logger_init as li
 from scipy.stats import norm
 from pandas_datareader import data as web
+import redis
+import pyarrow as pa
+
 import traceback 
 
 
@@ -62,14 +65,9 @@ class PostgresFetcher():
         return df
 
 class YahooFetcher():
-    def __init__(self,redis_port=None,redis_host='localhost'):
+    def __init__(self):
         self.history_dict = {}
-        self.redis_port = redis_port
-        redis_db = None
-        if reis_port is not None:
-            redis_db = redis.Redis(host = redis_host,port=redis_port,db=0)
-        self.redis_db = redis_db
-
+        
     def fetch_histories(self,symbol_list,dt_beg,dt_end):
         for symbol in symbol_list:
             if symbol in self.history_dict:
@@ -79,16 +77,11 @@ class YahooFetcher():
     def fetch_history(self,symbol,dt_beg,dt_end):
         if symbol in self.history_dict:
             return self.history_dict[symbol]            
-#         df = pdr.DataReader(symbol, 'yahoo', dt_beg, dt_end)
-        if redis_port is None:
-            try:
-                df = yf.download(symbol, dt_beg, dt_end,threads=False)
-            except Exception as e:
-                print(f'fetch_history error in YahooFetcher: {symbol}, {[dt_beg,dt_end]}: {e}')
-    #             traceback.print_exc()
-                return None
-        else:
-            try:
+        try:
+            df = yf.download(symbol, dt_beg, dt_end,threads=False)
+        except Exception as e:
+            print(f'fetch_history error in YahooFetcher: {symbol}, {[dt_beg,dt_end]}: {e}')
+            return None
 
         # move index to date column, sort and recreate index
         df['date'] = df.index
@@ -102,7 +95,27 @@ class YahooFetcher():
         df = df.rename(columns = cols_dict)
 #         self.history_dict[symbol] = df
         return df
-    
+
+class RedisFetcher():
+    def __init__(self,redis_port=6379,redis_host='127.0.0.1'):
+        self.history_dict = {}
+        self.redis_port = redis_port
+        redis_db = redis.Redis(host = redis_host,port=redis_port,db=0)
+        self.redis_db = redis_db
+
+    def fetch_histories(self,symbol_list,dt_beg,dt_end):
+        for symbol in symbol_list:
+            if symbol in self.history_dict:
+                continue
+            self.history_dict[symbol] = self.fetch_history(symbol, dt_beg, dt_end)
+           
+    def fetch_history(self,symbol,dt_beg,dt_end):
+        context = pa.default_serialization_context()
+        key = f'{symbol}_csv'
+        df = context.deserialize(redis_db.get(key))
+        return df
+
+
 
 class BarChartFetcher30Min():
     def __init__(self,api_key=None, bar_type=None, interval=None,endpoint_type = None):

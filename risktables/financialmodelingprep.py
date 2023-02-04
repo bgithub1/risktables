@@ -25,7 +25,7 @@ fmp_key = open('temp_folder/fmp_key.txt','r').read()
 def get_fmp_json(symbol_list,route):
     fmp_json_array = []
     for i in np.arange(0,len(symbol_list),3):
-        clist_string = ','.join([c.upper() for c in symbol_list[i:i+3]])
+        clist_string = ','.join([c.lower() for c in symbol_list[i:i+3]])
         fmp_url = f'https://financialmodelingprep.com/api/v3/{route}/{clist_string}?apikey={fmp_key}'
         frs =  requests.get(fmp_url).json()
         if (type(frs)==list):
@@ -54,14 +54,13 @@ def fmp_ratios(symbol_list):
     Get ratio data for list
     :param symbol_list: a list like ['aapl','msft','amzn','meta','googl']
     '''
-    route = 'financial-ratios'
+    route = 'ratios-ttm'
     df_final = pd.DataFrame()
-    fmp_json_list = get_fmp_json(symbol_list,route)
-    for fmp_json in fmp_json_list:
-        if 'ratiosList' not in fmp_json:
-            continue
-        json2 = fmp_json['ratiosList']
-        dft = pd.json_normalize(json2,meta=['symbol'],record_path=['ratios'])
+    for sym in symbol_list:
+        json2 = get_fmp_json([sym],route)
+        dft = pd.json_normalize(json2)
+        dft['symbol'] = sym
+        dft = dft[['symbol'] + [v for v in dft.columns.values if v != 'symbol']]
         df_final = pd.concat([df_final,dft])
     return df_final 
 
@@ -81,6 +80,7 @@ if __name__=='__main__':
         stocks = pd.read_csv(port_path).symbol.values
     else:
         stocks = pd.read_csv('spdr_etfs.csv').symbol.values
+    stocks = [v.lower() for v in stocks]
     dfp = fmp_profile(stocks)
     dfr = fmp_ratios(stocks)
     print('profile')

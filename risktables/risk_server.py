@@ -1,11 +1,14 @@
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi_utils.cbv import cbv
+from fastapi_utils.inferring_router import InferringRouter
 from pydantic import BaseModel
 
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io
+import uvicorn
 
 import pandas as pd
 import datetime
@@ -13,6 +16,15 @@ import pytz
 import var_models
 import risk_tables
 from IPython import display
+import argparse
+
+# use this for global variables that are referenced in the main
+class GlobalVariables:
+    pass
+
+__m = GlobalVariables()  # m will contain all module-level values
+__m.redis_port = None  # database name global in module
+
 
 
 app = FastAPI()
@@ -36,8 +48,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to Risk Tables Server"}
@@ -59,7 +69,7 @@ async def get_var():
 @app.get("/get_risk")
 async def get_risk_tables():
 	df_port = pd.read_csv('spdr_stocks.csv')
-	rt = risk_tables.RiskCalcs(use_postgres=False)
+	rt = risk_tables.RiskCalcs(use_postgres=False,redis_port = __m.redis_port)
 	var_results = rt.calculate(df_port)
 	return_dict = {}
 	for k in var_results.keys():
@@ -88,7 +98,7 @@ async def get_risk_tables_from_csv(csv_data: CsvData):
 		for v in list_data[1:]
 	]
 	df_port = pd.DataFrame(dict_data)
-	rt = risk_tables.RiskCalcs(use_postgres=False)
+	rt = risk_tables.RiskCalcs(use_postgres=False,redis_port=__m.redis_port)
 	var_results = rt.calculate(df_port)
 	return_dict = {}
 	for k in var_results.keys():
@@ -99,14 +109,31 @@ async def get_risk_tables_from_csv(csv_data: CsvData):
 	return return_dict
 
 
-# @app.post("/files/")
-# async def create_file(
-#     file: bytes = File(), fileb: UploadFile = File(), token: str = Form()
-# ):
-#     return {
-#         "file_size": len(file),
-#         "token": token,
-#         "fileb_content_type": fileb.content_type,
-#     }
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(
+			prog = 'risk_server',
+			description = 'A FastAPI restAPI to server pricing and risk information from a portfolio',
+			)
+	hour = datetime.datetime.now().hour
+	parser.add_argument('--host',default='127.0.0.1',type=str,help="uvicorn http host") 
+	parser.add_argument('--port',default=8555,type=int,help="uvicorn http port") 
+	parser.add_argument('--reload',
+		help="Tell uvicorn to automatically reload server if source code changes",
+		action='store_true'
+	) 
+	parser.add_argument('--log_level',default='info',type=str,
+			help="the logger's log level")
+	parser.add_argument('--redis_port',default=None,type=int,
+		help="Redis port, if you are going to use Redis instead of Yahoo to fetch data") 
+	args = parser.parse_args()  
+	print(args)
+	__m.redis_port = args.redis_port
 
+	uvicorn.run(
+		"risk_server:app", 
+		host=args.host, 
+		port=args.port, 
+		reload=args.reload, 
+		log_level=args.log_level
+	)
 

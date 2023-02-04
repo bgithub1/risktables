@@ -72,7 +72,7 @@ def log_or_print(mess,logger=None):
 def update_risk_data(df,temp_folder,use_postgres=False,
         dburl=None,databasename=None,username=None,
         password=None,schema_name=None,yahoo_daily_table=None,
-        calculate_hedge_ratio=False,logger=None,redis_port=None):
+        calculate_hedge_ratio=False,logger=None,redis_port=None,redis_host=None):
     
     error_message = None
     log_or_print(f'Start computing VaR {datetime.datetime.now()}',logger)
@@ -104,8 +104,10 @@ def update_risk_data(df,temp_folder,use_postgres=False,
                                schema_name=schema_name, yahoo_daily_table=yahoo_daily_table,
                                temp_folder=temp_folder)
         history_fetcher = varm.PostgresFetcher(hb)
+    elif redis_port is not None:
+        history_fetcher = varm.RedisFetcher(redis_port=redis_port,redis_host=redis_host)
     else:
-        history_fetcher = varm.YahooFetcher(redis_port=redis_port)
+        history_fetcher = varm.YahooFetcher()
 
     # Almost all of the computational work is done by VarModel
     vm = varm.VarModel(df,history_fetcher)
@@ -220,7 +222,8 @@ class RiskCalcs():
         calculate_hedge_ratio=False,
         temp_folder='./temp_folder',
         logger=None,
-        redis_port=None):
+        redis_port=None,
+        redis_host=None):
         
         self.use_postgres = use_postgres
         self.dburl = dburl
@@ -233,7 +236,8 @@ class RiskCalcs():
         self.calculate_hedge_ratio = calculate_hedge_ratio
         self.logger = dgc.init_root_logger() if logger is None else logger
         self.redis_port = redis_port
-        
+        self.redis_host = redis_host
+
     def calculate(self,df):
         return update_risk_data(df,self.temp_folder, use_postgres=self.use_postgres, 
                 dburl=self.dburl, databasename=self.databasename, 
@@ -242,7 +246,8 @@ class RiskCalcs():
                 yahoo_daily_table=self.yahoo_daily_table,
                 calculate_hedge_ratio=self.calculate_hedge_ratio,
                 logger=self.logger,
-                redis_port=self.redis_port)
+                redis_port=self.redis_port,
+                redis_host=self.redis_host)
         
         
         
