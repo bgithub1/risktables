@@ -26,6 +26,11 @@ const cols_conversions = {
   'theta':'theta',
   'unit_var':'uvar',
   'position_var':'pvar',
+  'd1':'d1',
+  'd5':'d5',
+  'd10':'d10',
+  'd15':'d15',
+  'd20':'d20',
   };
 
 // function build_url(getfull=0){
@@ -177,12 +182,18 @@ function display_json_results(json_results) {
   const pos_cols_to_display =  ['symbol','position','position_var'];
   const greeks_cols_to_display = ['underlying','delta','gamma','vega','theta','rho','position_var']
   const underlying_cols_to_display =  ['underlying','position_var'];
+  const atm_info_cols_to_display = ['underlying','close','stdev','d1','d5','d10','d15','d20'];
+
   display_position(json_results,'position',pos_cols_to_display);
   render_portfolio_stats(json_results);
   render_var_bar_plot(json_results);
   display_position(
     json_results,'greeks2',greeks_cols_to_display,json_results_key='df_risk_by_underlying'
   );
+  display_position(
+    json_results,'atm_info',atm_info_cols_to_display,json_results_key='df_atm_info'
+  );
+
 };
 
 // function display_risk_tables(){

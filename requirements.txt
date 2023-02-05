@@ -20,6 +20,7 @@ dash_auth
 redis
 pyarrow
 fastapi
+fastapi-utils
 ipython
 tqdm
 python_dateutil
