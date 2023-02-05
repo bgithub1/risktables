@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require("body-parser");
 const path = require('path');
+var fs = require('fs');
 
 // print process.argv
 // process.argv.forEach((val, index) => {
@@ -10,11 +11,13 @@ console.log(process.argv);
 
 var riskdata_path = '/riskdata';
 var riskdata_from_csv = '/riskdata_from_csv';
+var default_portfolio_path = '/default_portfolio';
 
 const pargs = process.argv;
 if (pargs.length > 2) {
   riskdata_path =  pargs[2] + riskdata_path;
   riskdata_from_csv =  pargs[2] + riskdata_from_csv;
+  default_portfolio_path = pargs[2] + default_portfolio_path;
 }
 
 
@@ -58,6 +61,18 @@ app.get(riskdata_path, (req, res) => {
       res.status(500).json({ error: error });
     });
 });
+
+app.get(default_portfolio_path, (req,res) => {
+  fs.readFile('../spdr_stocks.csv','utf8', function(err, data) { 
+    if (err) {
+      console.error(err);
+      res.json({error:err});
+    } else {
+      res.json({csv_text:data}) 
+    }     
+  });
+});
+
 
 
 app.post(riskdata_from_csv, (req, res) => {
