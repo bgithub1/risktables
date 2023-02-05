@@ -1,3 +1,5 @@
+// risk_tables.js holds all client-side javascript
+//  reference in index.html is <script src="js/risk_tables.js"></script>
 function showDiv(div_id) {
     document.getElementById(div_id).classList.remove("hide");
     document.getElementById(div_id).classList.add("show");
@@ -9,7 +11,7 @@ function hideDiv(div_id) {
 };
 
 
-const get_var_url = "/riskdata"
+// const get_var_url = "/riskdata"
 
 const cols_conversions = {
   'symbol':'sym', 
@@ -26,32 +28,32 @@ const cols_conversions = {
   'position_var':'pvar',
   };
 
-function build_url(getfull=0){
-  return get_var_url;
-}
+// function build_url(getfull=0){
+//   return get_var_url;
+// }
 
-async function fetch_var(getfull=0) {
-  var full_url = build_url(getfull=getfull);
-  showDiv('spinner');
-  const response = await fetch(full_url, 
-  {
-      method: 'GET',
-      headers: {
-          'Accept': 'application/json',
-      },
-  })
+// async function fetch_var(getfull=0) {
+//   var full_url = build_url(getfull=getfull);
+//   showDiv('spinner');
+//   const response = await fetch(full_url, 
+//   {
+//       method: 'GET',
+//       headers: {
+//           'Accept': 'application/json',
+//       },
+//   })
   
-  if (response.ok) { // if HTTP-status is 200-299
-    // get the response body (the method explained below)
-    let json = await response.json();
-    ret =  json;
-  } else {
-      alert("HTTP-Error: " + response.status);
-      ret =  null;
-  }
-  hideDiv('spinner');
-  return ret;  
-};
+//   if (response.ok) { // if HTTP-status is 200-299
+//     // get the response body (the method explained below)
+//     let json = await response.json();
+//     ret =  json;
+//   } else {
+//       alert("HTTP-Error: " + response.status);
+//       ret =  null;
+//   }
+//   hideDiv('spinner');
+//   return ret;  
+// };
 
 
 function convert_df_portfolio_col_names(row){
@@ -183,15 +185,15 @@ function display_json_results(json_results) {
   );
 };
 
-function display_risk_tables(){
-  // get var stuff from risk_server.py
-  // fetch and display data
-  fetch_var(getfull=0)
-  .then(function(json_results){
-    // console.log(json_results);
-    display_json_results(json_results);
-  });  
-}
+// function display_risk_tables(){
+//   // get var stuff from risk_server.py
+//   // fetch and display data
+//   fetch_var(getfull=0)
+//   .then(function(json_results){
+//     // console.log(json_results);
+//     display_json_results(json_results);
+//   });  
+// }
 
 async function get_local_csv_file() {
   // const content = document.querySelector('#filecontent');
@@ -222,6 +224,37 @@ async function get_local_csv_file() {
   if (file) {
     reader.readAsText(file);
   }
+};
+
+async function display_default_portfolio() {
+  const response = await fetch('/default_portfolio', {
+    method: 'GET',
+    headers: {
+        // 'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    }        
+  });
+  if (response.ok) { // if HTTP-status is 200-299
+    // get the response body (the method explained below)
+    let json = await response.json();
+    var csv_text = json['csv_text'];
+    csv_text = csv_text.replaceAll('\n',';');
+    csv_text = csv_text.replaceAll('\r',';');
+    showDiv('spinner');
+    upload_csv_to_server(csv_text)
+    .then(function(json_results){
+      // console.log(json_results);
+      if (json_results!==null){
+        display_json_results(json_results);
+      } else {
+        alert('bad csv file uploaded')
+      }
+      hideDiv('spinner');
+    });  
+  } else {
+      alert("HTTP-Error: " + response.status);
+      return null;
+  }  
 };
 
 async function upload_csv_to_server(csv_text){
@@ -255,6 +288,7 @@ async function upload_csv_to_server(csv_text){
 };
 
 function initit(){
-  hideDiv('spinner');
-  display_risk_tables();
+  // hideDiv('spinner');
+  // display_risk_tables();
+  display_default_portfolio();
 }
