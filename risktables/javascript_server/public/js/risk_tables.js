@@ -225,6 +225,8 @@ function display_json_results(json_results) {
   const underlying_cols_to_display =  ['underlying','position_var'];
   const atm_info_cols_to_display = ['underlying','close','stdev','d1','d5','d10','d15','d20'];
 
+  // The position, greeks and atm_info datasets always have the same columns.  Therefore,
+  //  no special treatment is necessary to re-display those datatables.
   display_position(json_results,'position',pos_cols_to_display);
   render_portfolio_stats(json_results);
   render_var_bar_plot(json_results);
@@ -234,12 +236,20 @@ function display_json_results(json_results) {
   display_position(
     json_results,'atm_info',atm_info_cols_to_display,json_results_key='df_atm_info'
   );
+
+  // The correlation matrix columns are equal to the number of underlyings, plus 1.
+  //  Because the columns vary, and because the datatables api cannot re-initialize the number
+  //  of columns, you need to add dummy columns to the data.  I have these column names start with
+  //  the '_' character.  Ther display_position method will then make those columns NON-visible
+  // Step 1: Get the columns with actual data
   var cor_matrix_cols = Object.keys(json_results['df_corr'][0]);
+  // Step 2: Create the NON display column names
   // the line below is like python:
   //    range(1,lim - len(cor_matrix_cols))
   var non_display_cols = Array.from(
     {length:CORR_COL_LIMIT-cor_matrix_cols.length},(v,i)=>'_'+(i+1).toString()
   );
+  // Step 3: Create null data in each roww of df_corr, for the NON-display columns
   var df_corr = json_results['df_corr'];
   var df_corr_row_indices = Array.from({length:df_corr.length},(v,i)=>i);
   for (var c of non_display_cols){
@@ -247,8 +257,11 @@ function display_json_results(json_results) {
       df_corr[i][c] = null;
     }
   }
+  // Step 4: Concatenate the good columns with the NON-display columns
   cor_matrix_cols = cor_matrix_cols.concat(non_display_cols);
+  // Step 5: store the new df_corr data in the json_results array
   json_results['df_corr'] = df_corr;
+  // Step 6: Call display_position
   display_position(json_results,'corr_matrix',cor_matrix_cols,json_results_key='df_corr');
 
 };
