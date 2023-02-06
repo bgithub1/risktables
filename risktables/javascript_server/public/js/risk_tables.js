@@ -1,5 +1,8 @@
 // risk_tables.js holds all client-side javascript
 //  reference in index.html is <script src="js/risk_tables.js"></script>
+// define the maximumn number of columns the correlation matrix can have
+const CORR_COL_LIMIT = 100;
+
 function showDiv(div_id) {
     document.getElementById(div_id).classList.remove("hide");
     document.getElementById(div_id).classList.add("show");
@@ -17,6 +20,7 @@ const cols_conversions = {
   'symbol':'sym', 
   'position':'qty',
   'underlying':'usym',
+  '*underlying':'usym',
   'close':'last',
   'stdev':'std',
   'delta':'del',
@@ -32,6 +36,13 @@ const cols_conversions = {
   'd15':'d15',
   'd20':'d20',
   };
+
+function convert_cols(col){
+  if (col in cols_conversions){
+    return cols_conversions[col];
+  }
+  return col;
+}
 
 // function build_url(getfull=0){
 //   return get_var_url;
@@ -63,13 +74,23 @@ const cols_conversions = {
 
 function convert_df_portfolio_col_names(row){
   var row_keys = Object.keys(row);
-  ret = Object.assign({}, ...row_keys.map((x) => ({[cols_conversions[x]]:row[x]})));
+  ret = Object.assign(
+    {}, ...row_keys.map(
+      (x) => (
+        {
+          // [cols_conversions[x]]:row[x]
+          [convert_cols(x)]:row[x]
+        }
+      )
+    )
+  );
   return ret;
 }
 
 function convert_df_portfolio(df_portfolio){
   // change the keys in each row of df_portolio to a shorter length
   var df_portfolio_new = df_portfolio.map(row=>convert_df_portfolio_col_names(row));
+  
   // make all floats only 3 decimal places
 
   for (var i=0;i<df_portfolio_new.length;i++){
@@ -91,14 +112,21 @@ function display_position(json_results,tag_id,cols_to_display,json_results_key='
   var df_portfolio = json_results[json_results_key];
   // convert the keys of that df_portfolio rows to keys that have smaller lengths, like 'symbol' will be 'sym'.
   df_portfolio = convert_df_portfolio(df_portfolio);
+  // these are the shorter length keys that we will display in the datatables
+  const converted_cols = cols_to_display.map(c=>convert_cols(c));
+  // this is the dictionary that you pass to datatable
+  var dt_cols = converted_cols.map(function(c){
+    return {"data":c,"title":c,"visible":c[0]!=='_'}
+  });
+  
   // display datatable
   if ( ! $.fn.DataTable.isDataTable("#"+tag_id) ) {
-    // these are the shorter lenght keys that we will display in the datatables
-    const converted_cols = cols_to_display.map(c=>cols_conversions[c])
-    // this is the dictionary that you pass to datatable
-    var dt_cols = converted_cols.map(function(c){
-      return {"data":c,"title":c}
-    });
+    // // these are the shorter length keys that we will display in the datatables
+    // const converted_cols = cols_to_display.map(c=>convert_cols(c));
+    // // this is the dictionary that you pass to datatable
+    // var dt_cols = converted_cols.map(function(c){
+    //   return {"data":c,"title":c}
+    // });
     // display the datatable
     $("#"+tag_id).dataTable( {
         "data": df_portfolio,
@@ -111,9 +139,22 @@ function display_position(json_results,tag_id,cols_to_display,json_results_key='
         "scrollX": true,
     } );      
   } else {
-    var dt = $("#"+tag_id).dataTable();
-    dt.fnClearTable();
-    dt.fnAddData(df_portfolio,redraw=true);
+    // var dt = $("#"+tag_id).dataTable();
+    // dt.fnDestroy();
+    $("#"+tag_id).dataTable( {
+        "data": df_portfolio,
+        "columns":dt_cols,
+        "order": [[0, 'asc']],
+        "pageLength": 10,
+        "searching": false,
+        "lengthChange": false,
+        "info":false,
+        "scrollX": true,
+        "destroy":true,
+    } );      
+    // var dt = $("#"+tag_id).dataTable();
+    // dt.fnClearTable();
+    // dt.fnAddData(df_portfolio,redraw=true);
   }        
 };
 
@@ -193,6 +234,22 @@ function display_json_results(json_results) {
   display_position(
     json_results,'atm_info',atm_info_cols_to_display,json_results_key='df_atm_info'
   );
+  var cor_matrix_cols = Object.keys(json_results['df_corr'][0]);
+  // the line below is like python:
+  //    range(1,lim - len(cor_matrix_cols))
+  var non_display_cols = Array.from(
+    {length:CORR_COL_LIMIT-cor_matrix_cols.length},(v,i)=>'_'+(i+1).toString()
+  );
+  var df_corr = json_results['df_corr'];
+  var df_corr_row_indices = Array.from({length:df_corr.length},(v,i)=>i);
+  for (var c of non_display_cols){
+    for (var i of df_corr_row_indices){
+      df_corr[i][c] = null;
+    }
+  }
+  cor_matrix_cols = cor_matrix_cols.concat(non_display_cols);
+  json_results['df_corr'] = df_corr;
+  display_position(json_results,'corr_matrix',cor_matrix_cols,json_results_key='df_corr');
 
 };
 

@@ -22,13 +22,15 @@
 <!--       <div class="col-xs-1"></div> -->
       <input id="file-upload" class="col-xs-12" type="file" accept=".csv" onchange="get_local_csv_file()" />
 <!--       <div class="col-xs-1"></div> -->
-    </div>    
+    </div>   
+
     <div class="row">
       <div class="bord">
         <button id="port_var" class="port_stats  col-xs-6"></button>
         <button id="sp_dollar_equiv" class="port_stats  col-xs-6"></button>
       </div>
     </div>
+
     <div class="row">
       <div class="bord" style="background-color: #f2d472">
         <button id="port_delta" class="port_stats  col-xs-3"></button>
@@ -37,31 +39,43 @@
         <button id="port_theta" class="port_stats  col-xs-3"></button>
       </div>
     </div>
+
     <div class="row">
       <div class="bord col-sm-6">
-        <table style="width:95%" id="position" >
+        <table  class="cell-border stripe"style="width:99%" id="position" >
           <caption style="color:#47bacc;text-align:center;font-weight: bold;">Current Position</caption>
         </table>
       </div> 
       <div class="col-sm-6">
-        <div id="var_plot" style="width:95%"></div>
+        <div id="var_plot" style="width:99%"></div>
       </div>         
     </div>  
+
     <div class="row">
       <div class="bord col-sm-12">
-        <table style="width:95%" id="greeks2">
+        <table class="cell-border stripe" style="width:99%" id="greeks2">
           <caption style="color:#47bacc;text-align:center;font-weight: bold;">Underlying Greeks</caption>
         </table>
       </div>   
     </div> 
+
     <div class="row">
       <div class="bord col-sm-12">
-        <table style="width:95%" id="atm_info">
+        <table class="cell-border stripe" style="width:99%" id="atm_info">
           <caption style="color:#47bacc;text-align:center;font-weight: bold;">Price Information</caption>
         </table>
       </div>   
     </div> 
   
+    <div class="row">
+      <div class="bord col-sm-12">
+<!--         <table style="width:95%" id="corr_matrix"> -->
+        <table class="cell-border stripe" id="corr_matrix">
+          <caption style="color:#47bacc;text-align:center;font-weight: bold;">Correlation Matrix</caption>
+        </table>
+      </div>   
+    </div> 
+
   </div>
 
   
