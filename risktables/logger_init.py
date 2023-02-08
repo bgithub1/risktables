@@ -5,7 +5,7 @@ Created on Aug 22, 2016
 '''
 import logging
 
-def init_root_logger(logfile,logging_level=None):
+def init_root_logger(logfile='logfile.log',logging_level=None):
     level = logging_level
     if level is None:
         level = logging.DEBUG

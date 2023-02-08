@@ -15,16 +15,18 @@ if  not './' in sys.path:
     sys.path.append(os.path.abspath('./'))
 if  not '../' in sys.path:
     sys.path.append(os.path.abspath('../'))
-    
+
+from risktables import logger_init
 from risktables import var_models as varm
 from risktables import option_models as opmod
 from risktables import portfolio_hedge as ph
 from risktables import build_history as bh
-from risktables import dgrid_components as dgc
+# from risktables import dgrid_components as dgc
 
 import pandas as pd
 import numpy as np
 import datetime 
+
 
 #********
 DEFAULT_PORTFOLIO_NAME=  'spdr_stocks.csv'             
@@ -234,7 +236,8 @@ class RiskCalcs():
         self.yahoo_daily_table = yahoo_daily_table
         self.temp_folder = temp_folder
         self.calculate_hedge_ratio = calculate_hedge_ratio
-        self.logger = dgc.init_root_logger() if logger is None else logger
+        # self.logger = dgc.init_root_logger() if logger is None else logger
+        self.logger = logger_init.init_root_logger() if logger is None else logger
         self.redis_port = redis_port
         self.redis_host = redis_host
 
