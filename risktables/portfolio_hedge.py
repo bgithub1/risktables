@@ -64,10 +64,18 @@ def create_random_portfolio_history(num_of_symbols=20,weights=None,dt_beg=None,d
 
 def create_portfolio_history(symbol_list,weights,dt_beg=None,dt_end=None):
     '''
-    Create a Data frame with columns 'date' and 'port', where port lists the value of a 
-    randomly created portfolio of 20 SP 500 stocks, with  weights = weights.  If weights is None, 
-        then randomly assign weights.
-    :param num_of_symbols: default is 20
+    Given a list of symbols in symbol_list, create a set of portfolio values, where 
+    each portolio value is the weighted sum of each day's closing prices for the securites in 
+    symbol_list.  
+
+    The returned DataFrame will have a single column, named "port", for each day between
+    dt_beg and dt_end, where the value of port will be the weighted sum for that day.
+    
+    The length of symbol_list MUST equal the length of weights.
+    The sum of weightw must = 1
+
+    :param symbol_list: list of SP 500 stocks
+    :param weights: list of values adding up to 1
     :param dt_beg: default is 150
     :param dt_end: default is today
     '''
@@ -137,12 +145,10 @@ class PortfolioHedge():
     def get_train_test_values(self):
         df = self.df.copy()
         ntd = self.num_of_test_days
-#         yreal = df[self.portfolio_value_col].as_matrix().reshape(-1)
         yreal = df[self.portfolio_value_col].values.reshape(-1)
         df = df.drop(self.portfolio_value_col,axis=1)
         if self.date_column is not None:
             df = df.drop(self.date_column)
-#         all_Xnp = df.as_matrix().reshape(-1,len(df.columns.values))
         all_Xnp = df.values.reshape(-1,len(df.columns.values))
         hedge_ratios = np.array([self.hedge_ratio_dict[symbol] for symbol in df.columns.values])
         ysim = np.array(all_Xnp @ hedge_ratios + self.bias) * self.last_day_ratio
@@ -160,22 +166,6 @@ class PortfolioHedge():
         return ret_dict
         
     def plot_hedge_ratios_vs_real(self):
-#         df = self.df.copy()
-#         ntd = self.num_of_test_days
-#         yreal = df[self.portfolio_value_col].as_matrix().reshape(-1)
-#         df = df.drop(self.portfolio_value_col,axis=1)
-#         if self.date_column is not None:
-#             df = df.drop(self.date_column)
-#         all_Xnp = df.as_matrix().reshape(-1,len(df.columns.values))
-#         hedge_ratios = np.array([self.hedge_ratio_dict[symbol] for symbol in df.columns.values])
-#         ysim = np.array(all_Xnp @ hedge_ratios + self.bias) * self.last_day_ratio
-#         # plot with without pandas
-#         x_train = list(range(len(all_Xnp)))[:-ntd]
-#         x_test =  list(range(len(all_Xnp)))[-ntd-1:]
-#         ysim_train = ysim[:-ntd]
-#         ysim_test = ysim[-ntd-1:] 
-#         yreal_train = yreal[:-ntd]
-#         yreal_test = yreal[-ntd-1:]
         d = self.get_train_test_values()
         x_train = d['x_train']
         x_test = d['x_test']

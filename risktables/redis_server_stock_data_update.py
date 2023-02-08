@@ -162,14 +162,31 @@ def schedule_updates(t=8,unit='hour',beg_sym=None,port_path=None,
 
 
 if __name__=='__main__':
+    prog_description = """
+    Update the redis server with new DataFrames for S&P500 stocks.
+    --------------------------------------------------------------
+    Example: Run once every day a 6 PM EST, using all of the Stocks in the S&P 500, and the spdr ETFs
+    > python3 redis_server_stock_data_update --timevalue 18
+
+    Example: Run once every hour, on the 32nd minute of that hour, using the same stocks/ETFs as above
+    > python3 redis_server_stock_data_update --timevalue 32 --unit minute
+
+    Example: Run one time on hour 11, using same stocks/ETFs as above
+    > python3 redis_server_stock_data_update --timevalue 11 --numruns 1
+
+    Example: Run once, same as previous example, but using another portolio 
+    that you've place in the subfolder ./temp_folder
+    > python3 redis_server_stock_data_update --timevalue 11 --numruns 1 --portfolio_path ./temp_folder/wf_port.csv
+    """
     parser = argparse.ArgumentParser(
-        prog = 'redis_server_stock_data_updates',
-        description = 'Update the redis server with new DataFrames for S&P500 stocks',
+        prog = 'redis_server_stock_data_update',
+        description = prog_description,
+        formatter_class=argparse.RawTextHelpFormatter
         )
     hour = datetime.datetime.now().hour
     parser.add_argument('--port',default=6379,type=int,help="redis port") 
     parser.add_argument('--portfolio_path',default=None,type=str,
-        help="portfolio path to obtain symbols.  The symbols should only be 'underlying' symbols") 
+        help="portfolio path to a csv file, in order to obtain symbols.  The csv columns should only be ['underlying','symbol'] ")
     parser.add_argument('--timevalue',default=hour,type=int,
         help="an int value that is either hours or minutes, depending on the arg 'unit'")
     parser.add_argument('--unit',default='hour',type=str,help="either 'hour' or 'minute'")  
@@ -185,11 +202,6 @@ if __name__=='__main__':
     redis_port = args.port
     redis_db = redis.Redis(host = 'localhost',port=redis_port,db=0)
 
-    # t = 20 if len(sys.argv)<2 else int(sys.argv[1])
-    # bs = None if len(sys.argv)<3 else sys.argv[2]
-    # port_path = None if len(sys.argv)<4 else sys.argv[3]
-    # unit = 'hour' if len(sys.argv)<5 else sys.argv[4]
-    # num_runs = 100 if len(sys.argv)<6 else int(sys.argv[5])
     t = args.timevalue
     bs = None
     port_path = args.portfolio_path
