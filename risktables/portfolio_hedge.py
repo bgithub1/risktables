@@ -70,7 +70,7 @@ def create_portfolio_history(symbol_list,weights,dt_beg=None,dt_end=None):
 
     The returned DataFrame will have a single column, named "port", for each day between
     dt_beg and dt_end, where the value of port will be the weighted sum for that day.
-    
+
     The length of symbol_list MUST equal the length of weights.
     The sum of weightw must = 1
 
@@ -110,7 +110,7 @@ class SingleLayerNet(nn.Module):
 
 class PortfolioHedge():
     def __init__(self,df,portfolio_value_col,date_column=None,num_of_test_days=None):
-        '''        
+        '''
         :param df: pandas DataFrame containing historical prices for each security that you will use to hedge,
             and the prices of your portfolio in a column whose name = portfolio_value_col.
             If df == None, then this class will use the sector spdr ETFs as the hedging securities
