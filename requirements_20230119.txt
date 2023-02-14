@@ -6,7 +6,7 @@ pandas==0.22.0
 dash_html_components==1.0.0
 dash_table==4.0.1
 passlib==1.7.1
-torch==1.0.1.post2
+torch==1.13.1
 dash_core_components==1.0.0
 pandas_datareader==0.7.0
 Flask==1.0.2

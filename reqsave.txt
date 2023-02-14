@@ -1,5 +1,5 @@
 matplotlib==3.0.3
-torch==1.0.1.post2
+torch==1.13.1
 numpy==1.14.3
 pandas==0.22.0
 ondemand==1.0.0
