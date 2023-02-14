@@ -26,6 +26,8 @@ tqdm
 python_dateutil
 uvicorn
 notebook
+ipdb
 torch
 torchvision
 torchaudio
+py_vollib

@@ -44,34 +44,6 @@ function convert_cols(col){
   return col;
 }
 
-// function build_url(getfull=0){
-//   return get_var_url;
-// }
-
-// async function fetch_var(getfull=0) {
-//   var full_url = build_url(getfull=getfull);
-//   showDiv('spinner');
-//   const response = await fetch(full_url, 
-//   {
-//       method: 'GET',
-//       headers: {
-//           'Accept': 'application/json',
-//       },
-//   })
-  
-//   if (response.ok) { // if HTTP-status is 200-299
-//     // get the response body (the method explained below)
-//     let json = await response.json();
-//     ret =  json;
-//   } else {
-//       alert("HTTP-Error: " + response.status);
-//       ret =  null;
-//   }
-//   hideDiv('spinner');
-//   return ret;  
-// };
-
-
 function convert_df_portfolio_col_names(row){
   var row_keys = Object.keys(row);
   ret = Object.assign(
@@ -192,7 +164,8 @@ function render_var_bar_plot(
       // showlegend: false
   };  
 
-  Plotly.newPlot(output_div,data,layout);  
+  var plot_config = {responsive: true}
+  Plotly.newPlot(output_div,data,layout,plot_config);  
 }
 
 function render_portfolio_stats(
